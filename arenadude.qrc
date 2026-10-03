@@ -1,0 +1,34 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Images/hero01.png</file>
+        <file>Images/hero02.png</file>
+        <file>Images/hero03.png</file>
+        <file>Images/hero04.png</file>
+        <file>Images/hero05.png</file>
+        <file>Images/hero06.png</file>
+        <file>Images/hero07.png</file>
+        <file>Images/hero08.png</file>
+        <file>Images/hero09.png</file>
+        <file>Fonts/Jersey10.ttf</file>
+        <file>Images/Mascot/idle.png</file>
+        <file>Images/Mascot/popcorn.png</file>
+        <file>Images/Mascot/thinking.png</file>
+        <file>Images/Mascot/point.png</file>
+        <file>Images/Mascot/smile.png</file>
+        <file>Images/Mascot/grin.png</file>
+        <file>Images/Mascot/smug.png</file>
+        <file>Images/Mascot/happy.png</file>
+        <file>Images/Mascot/sweat.png</file>
+        <file>Images/Mascot/grabbed.png</file>
+        <file>Images/Mascot/stars.png</file>
+        <file>Images/Mascot/detective.png</file>
+        <file>Images/Mascot/splash.png</file>
+        <file>Images/Mascot/thumb_up.png</file>
+        <file>Images/Mascot/hand_flat.png</file>
+        <file>Images/Mascot/thumb_down.png</file>
+        <file>Images/haText.png</file>
+        <file>Images/lfText.png</file>
+        <file>Images/hero10.png</file>
+        <file>Images/hero11.png</file>
+    </qresource>
+</RCC>

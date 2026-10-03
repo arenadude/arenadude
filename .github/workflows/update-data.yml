@@ -1,0 +1,53 @@
+# Refreshes the data Arena Dude downloads from this repo (cards.json, arena sets, HearthArena
+# tier list) with tools/update_data.py and opens a pull request with the changes.
+name: Update data
+
+on:
+  schedule:
+    - cron: "0 6 1,15 * *"   # 1st and 15th of each month, 06:00 UTC
+  workflow_dispatch:           # manual run from the Actions tab
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Run update_data.py
+        run: |
+          set +e
+          python tools/update_data.py > update.log 2>&1
+          status=$?
+          cat update.log
+          if [ $status -ne 0 ]; then echo "::warning::update_data.py exited with $status, see the log"; fi
+          {
+            echo "Automatic run of \`tools/update_data.py\`. Check the arena sets before merging, especially in the first days of a new expansion."
+            echo
+            grep "^WARNING" update.log | sed 's/^/> [!WARNING]\n> /' || true
+            echo
+            echo '```'
+            tail -c 60000 update.log
+            echo '```'
+          } > pr-body.md
+
+      - uses: peter-evans/create-pull-request@v8
+        with:
+          branch: data-update
+          delete-branch: true
+          commit-message: Update card data, arena sets and tier list
+          title: Data update
+          body-path: pr-body.md
+          add-paths: |
+            CardsJson
+            Arena
+            HearthArena

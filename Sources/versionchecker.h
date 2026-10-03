@@ -1,0 +1,48 @@
+#ifndef VERSIONCHECKER_H
+#define VERSIONCHECKER_H
+
+#include "utility.h"
+#include <QNetworkAccessManager>
+#include <QFutureWatcher>
+
+#define VERSION QString("v25.10")
+#define VERSION_URL AT_REPO_RAW_URL "/Version/version.json"
+
+
+class VersionChecker : public QObject
+{
+    Q_OBJECT
+public:
+    VersionChecker(QObject *parent);
+    ~VersionChecker();
+
+//Variables
+private:
+    QNetworkAccessManager * networkManager;
+    QString latestVersion;
+    bool newVersion;
+    QFutureWatcher<void> futureNewAppReplace;
+
+//Metodos
+private:
+    void checkUpdate(QByteArray versionJson);
+    void downloadLatestVersion(const QJsonObject &versionJsonObject);
+    void saveRestart(const QByteArray &data);
+    void removeOldNewVersion();
+    void showVersionLog(QString changesLog);
+    bool isNewApp();
+    void newAppReplace();
+    void saveRestartOld(const QByteArray &data);
+
+signals:
+    void pDebug(QString line, DebugLevel debugLevel=Normal, QString file="VersionChecker");
+
+public slots:
+    void replyFinished(QNetworkReply *reply);
+
+private slots:
+    void startNewAppReplace();
+    void finishNewAppReplace();
+};
+
+#endif // VERSIONCHECKER_H

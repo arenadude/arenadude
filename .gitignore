@@ -1,0 +1,4 @@
+tools/__pycache__/
+.DS_Store
+*.pro.user
+build*/

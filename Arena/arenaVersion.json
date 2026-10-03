@@ -1,0 +1,16 @@
+{
+  "arenaVersion": 83,
+  "arenaSets": [
+    "EMERALD_DREAM",
+    "THE_LOST_CITY",
+    "TIME_TRAVEL",
+    "CATACLYSM",
+    "ESCAPEFROM_VIOLET_HOLD",
+    "EVENT"
+  ],
+  "multiclassArena": false,
+  "trustHA": false,
+  "resetCards": 82,
+  "resetHeroes": 76,
+  "seasonId": 4
+}
