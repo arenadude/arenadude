@@ -1597,6 +1597,7 @@ void MainWindow::checkArenaCards()
 void MainWindow::downloadAllArenaCodes(const QStringList &codeList)
 {
     pDebug("CheckArenaCards: Downloading all arena cards.");
+    allCardsDownloadStarted = true;
     allCardsDownloadList.clear();
 
     for(const QString &code: codeList)
@@ -1633,6 +1634,9 @@ void MainWindow::updateProgressAllCardsDownload(QString code)
 
 void MainWindow::allCardsDownloaded()
 {
+    //The download queue also empties after the cards of the deck, before downloadAllArenaCodes() started
+    if(!allCardsDownloadStarted)    return;
+
     QTimer::singleShot(0, this, &MainWindow::startupReady);     //After main() connects the splash
     QSettings settings;
 
@@ -1640,6 +1644,7 @@ void MainWindow::allCardsDownloaded()
     {
         settings.setValue("allCardsDownloaded", true);
         allCardsDownloadNeeded = false;
+        allCardsDownloadStarted = false;
         allCardsDownloadList.clear();
         pDebug("CheckArenaCards: All arena cards have been downloaded.");
     }

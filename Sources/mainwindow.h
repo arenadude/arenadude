@@ -66,6 +66,7 @@ private:
     QNetworkAccessManager *networkManager;
     QStringList allCardsDownloadList;
     int allCardsDownloadTotal = 0;
+    bool allCardsDownloadStarted = false;
     //Gestionan si es necesario bajar todas las cartas usadas en arena debido a que el directorio de cartas se haya borrado
     //o haya una nueva version de tier list (rotacion sets)
     bool cardsJsonLoaded, arenaSetsLoaded, allCardsDownloadNeeded;
