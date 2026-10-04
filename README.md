@@ -18,7 +18,7 @@ Arena Dude reads Hearthstone's log files and looks at the screen. It never touch
 
 ## Download
 
-Get the latest build on the [Releases page](https://github.com/arenadude/arenadude/releases/latest).
+Get the latest build on the [Releases page](https://github.com/arenadude/arenadude/releases/latest), install steps with screenshots on [arenadude.github.io/arenadude](https://arenadude.github.io/arenadude/).
 
 ## Building from source
 

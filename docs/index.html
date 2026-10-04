@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arena Dude — Hearthstone Arena draft coach for Mac</title>
+<meta name="description" content="A pixel mascot that sits next to Hearthstone, rates every card in your Arena draft and tells you which one to take. Free for macOS.">
+<meta property="og:title" content="Arena Dude — Hearthstone Arena draft coach for Mac">
+<meta property="og:description" content="A pixel mascot that rates every card in your Arena draft and tells you which one to take.">
+<meta property="og:image" content="https://arenadude.github.io/arenadude/assets/icon.png">
+<link rel="icon" href="assets/icon.png">
+<style>
+@font-face { font-family: "Jersey 10"; src: url("assets/Jersey10.ttf") format("truetype"); font-display: swap; }
+
+:root {
+  --bg: #1d1530;
+  --bg-2: #271d40;
+  --ink: #f4efff;
+  --muted: #b9add6;
+  --purple: #6b2fc2;
+  --purple-hi: #8a4fe0;
+  --gold: #f2c14e;
+  --black: #0c0814;
+  --paper: #ffffff;
+  --paper-ink: #111111;
+  --px: 4px;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 17px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+a { color: var(--gold); }
+img.px { image-rendering: pixelated; }
+h1, h2, h3, .pixel { font-family: "Jersey 10", -apple-system, sans-serif; font-weight: 400; letter-spacing: .5px; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+
+/* Pixel frame: a black border with notched corners, like the mascot's bubble */
+.frame {
+  position: relative;
+  background: var(--paper);
+  color: var(--paper-ink);
+  box-shadow:
+    0 calc(-1 * var(--px)) 0 0 var(--black),
+    0 var(--px) 0 0 var(--black),
+    calc(-1 * var(--px)) 0 0 0 var(--black),
+    var(--px) 0 0 0 var(--black);
+  margin: var(--px);
+}
+
+header.top { display: flex; align-items: center; justify-content: space-between; padding: 18px 0; }
+.brand { display: flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-size: 30px; }
+.brand img { width: 40px; height: 40px; }
+nav a { color: var(--muted); text-decoration: none; margin-left: 20px; font-size: 16px; }
+nav a:hover { color: var(--ink); }
+
+.hero { display: grid; grid-template-columns: 1.1fr .9fr; gap: 40px; align-items: center; padding: 40px 0 70px; }
+.hero h1 { font-size: 64px; line-height: 1; margin: 0 0 16px; }
+.hero h1 span { color: var(--gold); }
+.hero p.lead { font-size: 20px; color: var(--muted); margin: 0 0 28px; max-width: 34em; }
+.mascot-box { display: flex; flex-direction: column; align-items: center; }
+.bubble { padding: 14px 18px; font-family: "Jersey 10", sans-serif; font-size: 26px; line-height: 1.1; max-width: 340px; margin-bottom: 36px; }
+/* Stepped pixel tail growing out of the bottom border */
+.bubble::before, .bubble::after { content: ""; position: absolute; left: 50%; background: var(--paper); }
+.bubble::before {
+  top: 100%; width: 24px; height: 12px; margin-left: -12px;
+  box-shadow: calc(-1 * var(--px)) 0 0 var(--black), var(--px) 0 0 var(--black);
+}
+.bubble::after {
+  top: calc(100% + 12px); width: 12px; height: 8px; margin-left: -6px;
+  box-shadow: calc(-1 * var(--px)) 0 0 var(--black), var(--px) 0 0 var(--black), 0 var(--px) 0 0 var(--black);
+}
+.mascot-box img { width: 300px; max-width: 80%; height: auto; }
+
+.btn {
+  display: inline-block; text-decoration: none; color: #fff; background: var(--purple);
+  font-family: "Jersey 10", sans-serif; font-size: 30px; padding: 10px 26px;
+  box-shadow: 0 calc(-1 * var(--px)) 0 var(--black), 0 var(--px) 0 var(--black), calc(-1 * var(--px)) 0 0 var(--black), var(--px) 0 0 var(--black), inset 0 calc(-1 * var(--px)) 0 rgba(0,0,0,.35);
+  margin: var(--px);
+}
+.btn:hover { background: var(--purple-hi); }
+.btn:active { transform: translateY(2px); }
+.meta { color: var(--muted); font-size: 14px; margin-top: 12px; }
+
+section { padding: 60px 0; }
+section.alt { background: var(--bg-2); }
+section h2 { font-size: 46px; margin: 0 0 30px; text-align: center; }
+
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 26px; }
+.feature { padding: 18px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.feature img { width: 120px; height: auto; margin-bottom: 8px; }
+.feature h3 { font-size: 28px; margin: 4px 0 6px; line-height: 1; }
+.feature p { margin: 0; font-size: 15px; color: #333; }
+
+.steps { counter-reset: step; max-width: 760px; margin: 0 auto; padding: 0; list-style: none; }
+.steps li { counter-increment: step; position: relative; padding: 0 0 38px 60px; }
+.steps li::before {
+  content: counter(step); position: absolute; left: 0; top: -4px; width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: "Jersey 10", sans-serif; font-size: 28px; color: var(--black); background: var(--gold);
+  box-shadow: 0 -3px 0 var(--black), 0 3px 0 var(--black), -3px 0 0 var(--black), 3px 0 0 var(--black);
+}
+.steps h3 { font-size: 28px; margin: 0 0 6px; line-height: 1.1; }
+.steps p { margin: 0 0 12px; color: var(--muted); }
+.steps img.shot { display: block; max-width: 100%; height: auto; border-radius: 10px; margin-top: 8px; }
+.steps .pair { display: flex; gap: 14px; flex-wrap: wrap; }
+.steps .pair img.shot { max-width: calc(50% - 7px); }
+kbd { font: 14px ui-monospace, Menlo, monospace; background: rgba(255,255,255,.1); padding: 1px 6px; border-radius: 4px; }
+
+.faq { max-width: 760px; margin: 0 auto; }
+.faq details { background: var(--bg-2); margin-bottom: 12px; padding: 14px 18px; border-left: 4px solid var(--purple); }
+section.alt .faq details { background: var(--bg); }
+.faq summary { cursor: pointer; font-family: "Jersey 10", sans-serif; font-size: 26px; }
+.faq p { color: var(--muted); margin: 10px 0 0; }
+
+.cta { text-align: center; }
+.cta img { width: 160px; height: auto; }
+
+footer { padding: 34px 0 50px; color: var(--muted); font-size: 14px; text-align: center; }
+footer p { margin: 6px 0; }
+
+@media (max-width: 760px) {
+  .hero { grid-template-columns: 1fr; padding-top: 10px; text-align: center; }
+  .hero h1 { font-size: 48px; }
+  .hero p.lead { margin-left: auto; margin-right: auto; }
+  .mascot-box { order: -1; }
+  .mascot-box img { width: 200px; }
+  nav a:not(.gh) { display: none; }
+  .steps .pair img.shot { max-width: 100%; }
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <a class="brand pixel" href="#"><img class="px" src="assets/icon.png" alt="">Arena Dude</a>
+    <nav>
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a href="#faq">FAQ</a>
+      <a class="gh" href="https://github.com/arenadude/arenadude">GitHub</a>
+    </nav>
+  </header>
+
+  <div class="hero">
+    <div>
+      <h1>Your <span>Arena</span> draft coach</h1>
+      <p class="lead">A pixel mascot sits next to Hearthstone, rates every card you're offered and tells you which one to take. Then it watches your run and has opinions about it.</p>
+      <a class="btn" href="https://github.com/arenadude/arenadude/releases/latest/download/Arena.Dude.Mac.zip">Download for Mac</a>
+      <div class="meta">Free · macOS on Apple Silicon · Hearthstone in English · <a href="https://github.com/arenadude/arenadude/releases/latest">Release notes</a></div>
+    </div>
+    <div class="mascot-box">
+      <div class="bubble frame">Take the one I point at. You can thank me after 12 wins.</div>
+      <img class="px" src="assets/mascot-point.png" alt="The Arena Dude mascot pointing" width="389" height="440">
+    </div>
+  </div>
+</div>
+
+<section id="features" class="alt">
+  <div class="wrap">
+    <h2>What the Dude does</h2>
+    <div class="features">
+      <div class="feature frame">
+        <img class="px" src="assets/mascot-smug.png" alt="" width="389" height="440">
+        <h3>Rates every card</h3>
+        <p>A plate under each card on the draft screen: its HearthArena tier score and its Firestone winrate.</p>
+      </div>
+      <div class="feature frame">
+        <img class="px" src="assets/mascot-thinking.png" alt="" width="389" height="440">
+        <h3>Picks for you</h3>
+        <p>Both sources combined into one pick, said out loud by the mascot. With commentary.</p>
+      </div>
+      <div class="feature frame">
+        <img class="px" src="assets/mascot-detective.png" alt="" width="389" height="440">
+        <h3>Fixes your redraft</h3>
+        <p>After a loss, which cards to cut from the deck, from the worst up.</p>
+      </div>
+      <div class="feature frame">
+        <img class="px" src="assets/mascot-popcorn.png" alt="" width="389" height="440">
+        <h3>Watches your run</h3>
+        <p>Class winrates on the hero choice, your record per run, and a reaction to every win and loss.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <h2>Install in 2 minutes</h2>
+    <ol class="steps">
+      <li>
+        <h3>Download and move to Applications</h3>
+        <p>Get <a href="https://github.com/arenadude/arenadude/releases/latest/download/Arena.Dude.Mac.zip">Arena.Dude.Mac.zip</a>, unzip it and drag <b>Arena Dude</b> into your Applications folder.</p>
+      </li>
+      <li>
+        <h3>Open it, then click Done</h3>
+        <p>Arena Dude isn't notarized by Apple yet, so macOS stops it the first time. That's expected.</p>
+        <img class="shot" src="install/1-not-opened.png" alt="&quot;Arena Dude&quot; Not Opened: click Done" width="372" loading="lazy">
+      </li>
+      <li>
+        <h3>Privacy &amp; Security → Open Anyway</h3>
+        <p>Open <b>System Settings → Privacy &amp; Security</b>, scroll down to <i>"Arena Dude" was blocked to protect your Mac</i> and click <b>Open Anyway</b>.</p>
+        <img class="shot" src="install/2-privacy-security.png" alt="Privacy &amp; Security: click Open Anyway" width="660" loading="lazy">
+      </li>
+      <li>
+        <h3>Open Anyway again, and confirm</h3>
+        <p>Confirm with Touch ID or your password. You do steps 2–4 only once.</p>
+        <div class="pair">
+          <img class="shot" src="install/3-open-anyway.png" alt="Open &quot;Arena Dude&quot;?: click Open Anyway" width="372" loading="lazy">
+          <img class="shot" src="install/4-touch-id.png" alt="Confirm with Touch ID or password" width="372" loading="lazy">
+        </div>
+      </li>
+      <li>
+        <h3>Let the Dude see your screen</h3>
+        <p>When macOS asks, click <b>Open System Settings</b>, turn on Arena Dude in <b>Screen &amp; System Audio Recording</b>, then quit and reopen it. Without it the mascot can't see your draft.</p>
+        <img class="shot" src="install/5-screen-recording.png" alt="Screen Recording: click Open System Settings" width="560" loading="lazy">
+      </li>
+      <li>
+        <h3>Go to the Arena</h3>
+        <p>Start Hearthstone and head to the Arena. On the first run the Dude downloads the card images, about a minute.</p>
+      </li>
+    </ol>
+  </div>
+</section>
+
+<section id="faq" class="alt">
+  <div class="wrap">
+    <h2>FAQ</h2>
+    <div class="faq">
+      <details>
+        <summary>Is it free?</summary>
+        <p>Yes. Arena Dude is free and open source.</p>
+      </details>
+      <details>
+        <summary>How does it know what's on screen?</summary>
+        <p>It reads Hearthstone's log files and looks at the screen to read the cards you're offered, like other deck trackers. It never touches the game client or its memory.</p>
+      </details>
+      <details>
+        <summary>Why does macOS say it can't verify the app?</summary>
+        <p>Apple only skips that warning for apps notarized through its paid developer program, which Arena Dude isn't part of yet. The install steps above get you past it once.</p>
+      </details>
+      <details>
+        <summary>Windows? Other languages?</summary>
+        <p>Not yet. Arena Dude runs on Macs with Apple Silicon and reads card names in English, so Hearthstone has to be set to English.</p>
+      </details>
+      <details>
+        <summary>Where do the ratings come from?</summary>
+        <p>Tier scores from <a href="https://www.heartharena.com">HearthArena</a>, winrates from <a href="https://www.firestoneapp.com">Firestone</a>, card data from <a href="https://hearthstonejson.com">HearthstoneJSON</a>. They're refreshed twice a month.</p>
+      </details>
+      <details>
+        <summary>Found a bug?</summary>
+        <p>Open an issue on <a href="https://github.com/arenadude/arenadude/issues">GitHub</a>.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="cta">
+  <div class="wrap">
+    <img class="px" src="assets/mascot-stars.png" alt="" width="389" height="440">
+    <h2>Ready for 12 wins?</h2>
+    <a class="btn" href="https://github.com/arenadude/arenadude/releases/latest/download/Arena.Dude.Mac.zip">Download for Mac</a>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <p>Arena Dude is based on <a href="https://github.com/supertriodo/Arena-Tracker">Arena Tracker</a> by Triodo and released under the <a href="https://github.com/arenadude/arenadude/blob/master/LICENSE">GNU GPL v2</a>. Font: Jersey 10 (SIL OFL).</p>
+    <p>Arena Dude is not affiliated with or endorsed by Blizzard Entertainment. Hearthstone is a trademark of Blizzard Entertainment, Inc.</p>
+  </div>
+</footer>
+
+</body>
+</html>

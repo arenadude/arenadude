@@ -38,7 +38,7 @@ qmake ArenaDude.pro && make        # or open ArenaDude.pro in Qt Creator, Releas
 - Resources (images, fonts) are bundled through `arenadude.qrc`. There is no `.ui` file: the windows are built in code.
 - App version is `VERSION` in `Sources/versionchecker.h`.
 
-Release: bump `VERSION`, build, `tools/package_mac.py <build>/ArenaDude.app "<out>/Arena Dude.app"` (self-contained, named and versioned, ad-hoc signed), `ditto -c -k --keepParent "Arena Dude.app" Arena.Dude.vX.Y.Z.Mac.zip`, publish a GitHub release `vX.Y.Z` with the zip, and only then append `vX.Y.Z` to `versionFree` in `Version/version.json` (it goes live on push: listing a version before its release sends users to a missing page). The app is not notarized: the release notes explain how to open it the first time (System Settings → Privacy & Security → Open Anyway) and grant Screen Recording.
+Release: bump `VERSION`, build, `tools/package_mac.py <build>/ArenaDude.app "<out>/Arena Dude.app"` (self-contained, named and versioned, ad-hoc signed), `ditto -c -k --keepParent "Arena Dude.app" Arena.Dude.Mac.zip` (always this name: the landing page and the release notes link `releases/latest/download/Arena.Dude.Mac.zip`), publish a GitHub release `vX.Y.Z` with the zip, and only then append `vX.Y.Z` to `versionFree` in `Version/version.json` (it goes live on push: listing a version before its release sends users to a missing page). The app is not notarized: the release notes explain how to open it the first time (System Settings → Privacy & Security → Open Anyway) and grant Screen Recording.
 
 Debug toggles (compile-time) are the `DEBUG_*` defines in `Sources/utility.h`.
 
