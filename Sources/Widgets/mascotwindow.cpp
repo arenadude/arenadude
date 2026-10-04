@@ -49,6 +49,8 @@ MascotWindow::MascotWindow(QWidget *parent)
             frames[i] << frame;
         }
     }
+    //Idle: a blink, a while, a bored glance to the right, a while, another blink
+    frameSteps[Idle] = {{0, 3000}, {1, 70}, {2, 110}, {1, 70}, {0, 2500}, {3, 1400}, {0, 1500}, {1, 70}, {2, 110}, {1, 70}};
     //Popcorn: a bite, then chewing
     frameSteps[Popcorn] = {{0, 1400}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 700}};
     //Blind: the cane taps right, sweeps, taps left
