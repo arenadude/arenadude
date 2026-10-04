@@ -51,6 +51,8 @@ MascotWindow::MascotWindow(QWidget *parent)
     }
     //Popcorn: a bite, then chewing
     frameSteps[Popcorn] = {{0, 1400}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 700}};
+    //Blind: the cane taps right, sweeps, taps left
+    frameSteps[Blind] = {{0, 380}, {1, 220}, {2, 380}, {3, 220}};
     for(int i=0; i<NumMoods; i++)
     {
         //Steps pointing past the frames found (a missing file) would draw nothing
@@ -88,6 +90,7 @@ void MascotWindow::setMood(Mood mood)
     frameStep = 0;
     frameTimer.stop();
     if(animated && isVisible() && !frameSteps[mood].isEmpty())  frameTimer.start(frameSteps[mood][0].second);
+    relayout();     //The sprite can be taller
     update();
 }
 
@@ -98,6 +101,7 @@ void MascotWindow::setAnimated(bool animated)
     frameStep = 0;
     frameTimer.stop();
     if(animated && isVisible() && !frameSteps[mood].isEmpty())  frameTimer.start(frameSteps[mood][0].second);
+    relayout();
     update();
 }
 
@@ -135,12 +139,25 @@ void MascotWindow::saySections(const QString &text, const QList<Section> &sectio
 }
 
 
+//The frame playing, else the mood's still sprite
+const QPixmap &MascotWindow::currentSprite() const
+{
+    if(animated && !frameSteps[mood].isEmpty())     return frames[mood][frameSteps[mood][frameStep].first];
+    return sprites[mood];
+}
+
+
 //Bubble on top, the character under it. The window is placed so the character's bottom center is on the anchor.
+//Every sprite is drawn at the Idle sprite's pixel scale: a taller one (the blind mascot's cane) keeps the head where
+//the others have it and hangs below the anchor.
 void MascotWindow::relayout()
 {
-    const QPixmap &sprite = sprites[Idle];
-    int spriteW = sprite.isNull() ? MASCOT_SPRITE_HEIGHT : MASCOT_SPRITE_HEIGHT * sprite.width() / sprite.height();
-    int spriteH = MASCOT_SPRITE_HEIGHT;
+    const QPixmap &idle = sprites[Idle];
+    const QPixmap &sprite = currentSprite();
+    const double scale = idle.isNull() ? 1.0 : MASCOT_SPRITE_HEIGHT / static_cast<double>(idle.height());
+    int spriteW = sprite.isNull() ? MASCOT_SPRITE_HEIGHT : qRound(sprite.width() * scale);
+    int spriteH = sprite.isNull() ? MASCOT_SPRITE_HEIGHT : qRound(sprite.height() * scale);
+    spriteBelowAnchor = std::max(0, spriteH - MASCOT_SPRITE_HEIGHT);
     const int inset = MASCOT_BUBBLE_PADDING + MASCOT_PIXEL;
     QFontMetrics fm(bubbleFont);
     const int lineH = fm.height();
@@ -222,7 +239,7 @@ void MascotWindow::relayout()
     spriteRect = QRect((w - spriteW)/2, bubbleBlockH, spriteW, spriteH);
 
     setFixedSize(w, h);
-    move(anchor.x() - w/2, anchor.y() - h);
+    move(anchor.x() - w/2, anchor.y() - h + spriteBelowAnchor);
 
     //Clicks go through the empty parts of the window
     QRegion region(spriteRect);
@@ -270,8 +287,7 @@ void MascotWindow::paintEvent(QPaintEvent *)
     QPainter painter(this);
     painter.setRenderHint(QPainter::SmoothPixmapTransform);
     if(!text.isEmpty())     drawBubble(painter);
-    const bool playing = animated && !frameSteps[mood].isEmpty();
-    painter.drawPixmap(spriteRect, playing ? frames[mood][frameSteps[mood][frameStep].first] : sprites[mood]);
+    painter.drawPixmap(spriteRect, currentSprite());
 }
 
 
@@ -491,7 +507,7 @@ void MascotWindow::mouseMoveEvent(QMouseEvent *event)
         }
     }
     anchor = pos - dragOffset;
-    move(anchor.x() - width()/2, anchor.y() - height());
+    move(anchor.x() - width()/2, anchor.y() - height() + spriteBelowAnchor);
     applyCursor(Qt::ClosedHandCursor);
 }
 

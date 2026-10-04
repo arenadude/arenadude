@@ -43,6 +43,9 @@ public:
     Mood currentMood() const { return mood; }
     //The moods with frames (<mood>_0.png, <mood>_1.png...) play them instead of their still sprite
     void setAnimated(bool animated);
+private:
+    const QPixmap &currentSprite() const;
+public:
     //An empty text hides the bubble. With msec > 0 the bubble hides by itself after that time.
     //With a button text, the bubble shows a button that runs the action (and hides the bubble).
     void say(const QString &text, int msec = 0, const QString &button = QString(), std::function<void()> action = nullptr);
@@ -90,6 +93,7 @@ private:
     QFont bubbleFont;
     QRect bubbleRect, textRect, buttonRect, spriteRect;
     QPoint anchor;              //Global position of the character's bottom center
+    int spriteBelowAnchor = 0;  //A sprite taller than the others (the blind mascot's cane) hangs below the anchor
     QPoint dragOffset, pressPos;
     bool dragging = false, dragMoved = false, buttonPressed = false;
 
