@@ -41,6 +41,8 @@ public:
 
     void setMood(Mood mood);
     Mood currentMood() const { return mood; }
+    //The moods with frames (<mood>_0.png, <mood>_1.png...) play them instead of their still sprite
+    void setAnimated(bool animated);
     //An empty text hides the bubble. With msec > 0 the bubble hides by itself after that time.
     //With a button text, the bubble shows a button that runs the action (and hides the bubble).
     void say(const QString &text, int msec = 0, const QString &button = QString(), std::function<void()> action = nullptr);
@@ -60,6 +62,7 @@ signals:
 protected:
     void paintEvent(QPaintEvent *event) override;
     void showEvent(QShowEvent *event) override;
+    void hideEvent(QHideEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
@@ -68,6 +71,12 @@ protected:
 
 private:
     QPixmap sprites[NumMoods];
+    //Animation: the frames of a mood and the order they play in, (frame, msec) steps in a loop
+    QList<QPixmap> frames[NumMoods];
+    QList<QPair<int, int>> frameSteps[NumMoods];
+    bool animated = false;
+    int frameStep = 0;
+    QTimer frameTimer;
     Mood mood = Idle;
     Mood moodBeforeDrag = Idle;
     QString text, buttonText;

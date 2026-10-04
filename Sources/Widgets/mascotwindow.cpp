@@ -39,6 +39,33 @@ MascotWindow::MascotWindow(QWidget *parent)
     for(int i=0; i<NumMoods; i++)   sprites[i] = QPixmap(QStringLiteral(":/Images/Mascot/%1.png").arg(files[i]));
     for(int i=0; i<NumMoods; i++)   if(sprites[i].isNull())     sprites[i] = sprites[fallbacks[i]];
 
+    //Animated moods: their frames, and how long each shows (frame 0 is the still sprite's pose)
+    for(int i=0; i<NumMoods; i++)
+    {
+        for(int n=0; ; n++)
+        {
+            QPixmap frame(QStringLiteral(":/Images/Mascot/%1_%2.png").arg(files[i]).arg(n));
+            if(frame.isNull())  break;
+            frames[i] << frame;
+        }
+    }
+    //Popcorn: a bite, then chewing
+    frameSteps[Popcorn] = {{0, 1400}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 700}};
+    for(int i=0; i<NumMoods; i++)
+    {
+        //Steps pointing past the frames found (a missing file) would draw nothing
+        bool missingFrame = false;
+        for(const QPair<int, int> &step: std::as_const(frameSteps[i]))  if(step.first >= frames[i].count())     missingFrame = true;
+        if(missingFrame)    frameSteps[i].clear();
+    }
+    frameTimer.setSingleShot(true);
+    connect(&frameTimer, &QTimer::timeout, this, [this]() {
+        if(frameSteps[mood].isEmpty())  return;
+        frameStep = (frameStep + 1) % frameSteps[mood].count();
+        frameTimer.start(frameSteps[mood][frameStep].second);
+        update();
+    });
+
     bubbleFont = pixelFont(MASCOT_FONT_SIZE);
 
     sayTimer.setSingleShot(true);
@@ -58,6 +85,19 @@ void MascotWindow::setMood(Mood mood)
     }
     if(this->mood == mood)  return;
     this->mood = mood;
+    frameStep = 0;
+    frameTimer.stop();
+    if(animated && isVisible() && !frameSteps[mood].isEmpty())  frameTimer.start(frameSteps[mood][0].second);
+    update();
+}
+
+
+void MascotWindow::setAnimated(bool animated)
+{
+    this->animated = animated;
+    frameStep = 0;
+    frameTimer.stop();
+    if(animated && isVisible() && !frameSteps[mood].isEmpty())  frameTimer.start(frameSteps[mood][0].second);
     update();
 }
 
@@ -230,7 +270,8 @@ void MascotWindow::paintEvent(QPaintEvent *)
     QPainter painter(this);
     painter.setRenderHint(QPainter::SmoothPixmapTransform);
     if(!text.isEmpty())     drawBubble(painter);
-    painter.drawPixmap(spriteRect, sprites[mood]);
+    const bool playing = animated && !frameSteps[mood].isEmpty();
+    painter.drawPixmap(spriteRect, playing ? frames[mood][frameSteps[mood][frameStep].first] : sprites[mood]);
 }
 
 
@@ -238,12 +279,21 @@ void MascotWindow::paintEvent(QPaintEvent *)
 void MascotWindow::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
+    if(animated && !frameSteps[mood].isEmpty())     frameTimer.start(frameSteps[mood][frameStep].second);
     if(pendingSayMsec > 0)
     {
         sayTimer.start(pendingSayMsec);
         pendingSayMsec = 0;
     }
     QTimer::singleShot(0, this, [this]() { MacWindow::raiseAboveFloating(this); });
+}
+
+
+//No frames played while hidden (Hearthstone not on screen)
+void MascotWindow::hideEvent(QHideEvent *event)
+{
+    QWidget::hideEvent(event);
+    frameTimer.stop();
 }
 
 

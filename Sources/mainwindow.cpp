@@ -664,6 +664,8 @@ static QString mascotPick(const QStringList &lines)
 void MainWindow::createMascotWindow()
 {
     mascotWindow = new MascotWindow();
+    //The animated mascot is meant for supporters; until that's checked it's a setting (defaults write ... mascotAnimated)
+    mascotWindow->setAnimated(QSettings().value("mascotAnimated", false).toBool());
     connect(mascotWindow, SIGNAL(quitRequested()),
             this, SLOT(closeApp()));
     connect(mascotWindow, &MascotWindow::discordRequested, this, []() {
