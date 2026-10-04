@@ -40,6 +40,10 @@ MainWindow::MainWindow(QWidget *parent) :
     readSettings();
     checkFirstRunNewVersion();
     createVersionChecker();//Despues de createDataDir (removeHSDir) y checkFirstRunNewVersion() ya que reescribe el settings "runVersion"
+    //A system dialog over Hearthstone (e.g. macOS asking to allow the capture) hides the game from the mascot
+    QTimer *systemDialogTimer = new QTimer(this);
+    connect(systemDialogTimer, &QTimer::timeout, this, &MainWindow::checkSystemDialog);
+    systemDialogTimer->start(1000);
 
     QTimer::singleShot(1000, this, SLOT(init()));
 
@@ -714,10 +718,42 @@ void MainWindow::createMascotWindow()
 }
 
 
+//While a system dialog covers Hearthstone the mascot can't read the game: it asks to answer the dialog, and says
+//the current draft status again once it's gone
+void MainWindow::checkSystemDialog()
+{
+    if(!mascotLive)     return;
+    const bool dialog = MacWindow::systemDialogOverHearthstone();
+    if(dialog == mascotSaysSystemDialog)    return;
+    mascotSaysSystemDialog = dialog;
+    mascotSaysStatus = false;
+    mascotSaysAdvice = false;
+    if(dialog)
+    {
+        pDebug("A system dialog covers Hearthstone.");
+        mascotWindow->setMood(MascotWindow::Blind);
+        mascotWindow->say("macOS put a dialog over the game, so I can't see a thing. Hit Allow and I'm back in business.");
+    }
+    else
+    {
+        pDebug("The system dialog over Hearthstone is gone.");
+        mascotLastStatus.clear();
+        const QString status = draftHandler->getDraftStatus();
+        if(!status.isEmpty())   mascotDraftStatus(status);
+        else
+        {
+            mascotWindow->setMood(MascotWindow::Idle);
+            mascotWindow->say("");
+        }
+    }
+}
+
+
 //The draft status in the mascot's words, with a matching face
 void MainWindow::mascotDraftStatus(QString text)
 {
     if(!mascotLive)     return;     //The picks replayed at startup; mascotGreeting says where we are
+    if(mascotSaysSystemDialog)  return;     //Said again when the dialog is gone
     if(text.isEmpty())
     {
         //Only its own bubble: the discard screen clears the status right when the mascot shows the cards to remove
@@ -734,8 +770,7 @@ void MainWindow::mascotDraftStatus(QString text)
     {
         const bool newPickOrProblem = (text.startsWith("Scanning") && !text.startsWith("Scanning the deck list")) ||
                                       text.startsWith("Looking for the arena") ||
-                                      text.startsWith("Can't see") || text.contains("Game Mode") ||
-                                      text.startsWith("macOS asks to allow");
+                                      text.startsWith("Can't see") || text.contains("Game Mode");
         if(!newPickOrProblem)   return;
         mascotSaysAdvice = false;
     }
@@ -772,11 +807,6 @@ void MainWindow::mascotDraftStatus(QString text)
         });
         mascotSaysStatus = true;
         return;
-    }
-    else if(text.startsWith("macOS asks to allow"))
-    {
-        mood = MascotWindow::Blind;
-        line = "macOS is asking if I can see your screen. Hit Allow and I'm back in business.";
     }
     else if(text.startsWith("Looking for the discard screen"))
     {

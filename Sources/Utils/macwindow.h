@@ -27,6 +27,10 @@ namespace MacWindow
     //prompt once; granting it takes effect after a restart of the app.
     bool hasScreenRecording();
     void requestScreenRecording();
+
+    //A system dialog (UserNotificationCenter: e.g. macOS 15's "... requesting to bypass the system private window
+    //picker", asked when the capture starts) over Hearthstone's window. The capture works, but the dialog covers the game.
+    bool systemDialogOverHearthstone();
 }
 
 

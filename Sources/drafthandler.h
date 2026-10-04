@@ -30,7 +30,6 @@
 #define CAPTUREDRAFT_RETRY_TIME         500     //After a failed screenshot
 #define CAPTUREDRAFT_MAX_FAILS          10      //Failed screenshots in a row before the screen is looked for again
 #define HERO_CAPTURE_RESCAN_TIME        8000    //Heroes not read by then: the screen is looked for again
-#define CAPTURE_ASK_STATUS              "macOS asks to allow the screen capture."
 
 #define CARD_ACCEPTED_THRESHOLD             0.35
 #define CARD_ACCEPTED_THRESHOLD_REDRAFT     0.4
@@ -163,7 +162,6 @@ private:
     QFutureWatcher<ScreenDetection> futureFindScreenRects;
     QElapsedTimer findScreenClock;         //From the start of findScreenRects to its result
     std::atomic<qint64> findScreenStartMs{0}, findScreenCaptureMs{0};
-    std::atomic<bool> captureAskOnScreen{false};  //macOS's "Allow" dialog for the screen capture, read by the hero OCR
     bool extendedCapture;
     QStringList heroCodesList;
     QMap<QString, float> *fireWRMap;
@@ -326,6 +324,7 @@ public:
     void readRewardsWins();
     void readReadyUpWins();
     bool isEmptyDeck();
+    QString getDraftStatus();
     void setFireWRMap(QMap<QString, float> fireWRMap[]);
     void setFireSamplesMap(QMap<QString, int> fireSamplesMap[]);
     void setMulticlassArena(bool multiclassArena);

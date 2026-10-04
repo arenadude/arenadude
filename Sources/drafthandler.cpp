@@ -102,13 +102,8 @@ void DraftHandler::setDraftStatus(const QString &text)
 {
     //Waiting on the Ready Up screen for the offered redraft: "Scanning cards..." or "Can't see the arena" would be wrong there
     if(!text.isEmpty() && isRedraftOffered())   return;
-    //macOS's "Allow" dialog covers the screen: that's why nothing is read
-    QString status = text;
-    if(captureAskOnScreen && (text.startsWith("Scanning") || text.startsWith("Looking for the arena") ||
-                              text.startsWith("Can't see the arena")))
-        status = CAPTURE_ASK_STATUS;
-    draftStatus = status;
-    emit draftStatusChanged(status);
+    draftStatus = text;
+    emit draftStatusChanged(text);
 }
 
 
@@ -593,7 +588,6 @@ void DraftHandler::clearLists(bool keepCounters)
 void DraftHandler::leaveArena()
 {
     emit pDebug("Leave arena.");
-    captureAskOnScreen = false;
     setDraftStatus("");
     stopLoops = true;
     stopRedraftWatch();
@@ -2488,6 +2482,12 @@ PickScores DraftHandler::getPickScores()
 }
 
 
+QString DraftHandler::getDraftStatus()
+{
+    return draftStatus;
+}
+
+
 bool DraftHandler::isEmptyDeck()
 {
     return (numDraftedCards == 0);
@@ -3494,11 +3494,6 @@ bool DraftHandler::findHeroRectsByOcr(ScreenDetection &screenDetection)
     hideTrackerWindows(image, hsRect);
     if(image.width() > 1400)    image = image.scaledToWidth(1400, Qt::SmoothTransformation);
     const QList<MacOcr::TextLine> lines = MacOcr::recognizeTextLines(image, "enUS");
-    //"... is requesting to bypass the system private window picker and directly access your screen": macOS 15
-    //asks it once more when the capture starts, and the dialog covers the heroes until it's answered
-    bool captureAsk = false;
-    for(const MacOcr::TextLine &line: lines)    if(line.text.contains("window picker", Qt::CaseInsensitive))  captureAsk = true;
-    captureAskOnScreen = captureAsk;
 
     static const QStringList classNames = {"DEATHKNIGHT", "DEMONHUNTER", "DRUID", "HUNTER", "MAGE", "PALADIN",
                                            "PRIEST", "ROGUE", "SHAMAN", "WARLOCK", "WARRIOR"};
@@ -3644,7 +3639,6 @@ void DraftHandler::updateHeroScores()
 
 void DraftHandler::showNewHeroes()
 {
-    captureAskOnScreen = false;
     int classOrder[3];
     for(int i=0; i<3; i++)
     {

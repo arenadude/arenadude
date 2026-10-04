@@ -280,3 +280,33 @@ void MacHoverTracker::dispatchEnterLeave(QWidget *enter, QWidget *leave, const Q
         QApplication::sendEvent(w, &event);
     }
 }
+
+
+bool MacWindow::systemDialogOverHearthstone()
+{
+    CGRect hearthstone = CGRectNull;
+    QList<CGRect> dialogs;
+    @autoreleasepool
+    {
+        CFArrayRef windows = CGWindowListCopyWindowInfo(kCGWindowListOptionOnScreenOnly | kCGWindowListExcludeDesktopElements,
+                                                        kCGNullWindowID);
+        if(windows == nullptr)  return false;
+        for(NSDictionary *window in (__bridge NSArray *)windows)
+        {
+            NSString *owner = window[(__bridge NSString *)kCGWindowOwnerName];
+            CGRect bounds;
+            if(!CGRectMakeWithDictionaryRepresentation((__bridge CFDictionaryRef)window[(__bridge NSString *)kCGWindowBounds], &bounds))
+                continue;
+            if([owner isEqualToString:@"Hearthstone"] && [window[(__bridge NSString *)kCGWindowLayer] intValue] == 0)
+            {
+                if(CGRectIsNull(hearthstone) || bounds.size.width*bounds.size.height > hearthstone.size.width*hearthstone.size.height)
+                    hearthstone = bounds;
+            }
+            else if([owner isEqualToString:@"UserNotificationCenter"])     dialogs << bounds;
+        }
+        CFRelease(windows);
+    }
+    if(CGRectIsNull(hearthstone))   return false;
+    for(const CGRect &dialog: dialogs)  if(CGRectIntersectsRect(dialog, hearthstone))   return true;
+    return false;
+}

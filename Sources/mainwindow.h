@@ -60,6 +60,7 @@ private:
     QHash<QString, qint64> mascotStatusShownAt; //When each draft status was last shown (anti flip-flop)
     int mascotSecretsSeen = 0;                  //Enemy secrets since the app started
     bool mascotSaysStatus = false;              //The bubble shows a draft status, cleared with it
+    bool mascotSaysSystemDialog = false;        //A system dialog covers Hearthstone (checkSystemDialog)
     bool mascotSaysAdvice = false;              //The bubble shows the pick advice: only a new pick or a problem replaces it
     bool mascotLive = false;                    //Game events replayed from the logs at startup are ignored
     bool mascotLastWon = false;
@@ -148,6 +149,7 @@ private slots:
     void closeApp();
     void createMascotWindow();
     void mascotDraftStatus(QString text);
+    void checkSystemDialog();
     void mascotStartGame();
     void mascotEndGame(bool playerWon, bool playerUnknown);
     void mascotEnemySecret();
