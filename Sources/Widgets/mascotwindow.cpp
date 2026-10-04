@@ -149,6 +149,9 @@ void MascotWindow::relayout()
             contentW = std::max(contentW, buttonBox.width());
             contentH += MASCOT_BUTTON_GAP + MASCOT_BUTTON_HEIGHT;
         }
+        //The rows take the whole width: their values line up with the right edge even when the text is wider
+        for(QRect &rect: headerRects)   rect.setWidth(contentW);
+        for(QList<QRect> &rects: rowRects)  for(QRect &rect: rects)     rect.setWidth(contentW);
         bubbleSize = QSize(contentW + 2*inset, contentH + 2*inset);
     }
 
