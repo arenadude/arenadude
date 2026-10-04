@@ -831,7 +831,10 @@ void MainWindow::mascotGreeting()
                        "Screen Recording, then restart me.";
         if(logLoader->isHearthstoneRestartNeeded() && hearthstoneRunning)
             line += " Restart Hearthstone too, so I can read its logs.";
-        mascotWindow->say(line);
+        //Opens System Settings on the Screen Recording list (macOS offers "Quit & Reopen" once it's turned on)
+        mascotWindow->say(line, 0, "Open Settings", []() {
+            QDesktopServices::openUrl(QUrl("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"));
+        });
     }
     //First run with Hearthstone already open: it only logs after a restart. Stays until something else is said.
     else if(logLoader->isHearthstoneRestartNeeded() && hearthstoneRunning)
