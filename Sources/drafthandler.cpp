@@ -1754,11 +1754,13 @@ void DraftHandler::readCardNames(const cv::Mat &screenCapture)
             //Centered on the card (0.15 art widths left of the art's center), 1.25 art widths each side: long names
             //("Spirit of the Kaldorei") lost their start with the old crop, which reached 1.4 right but 1 left.
             //The found arts can be spaced a bit short of the cards: plateScale (from the names read) moves the crop.
+            //0.62 art heights down: spell and signature card names sit lower than the minions' scroll and 0.44
+            //cut them ("Dethrone" read as "nwAt"); the card text still starts below.
             const double scale = (plateScale > 0) ? plateScale : 1.0;
             const double artSpacing = screenRects[1].x - screenRects[0].x;
             const double center = art.x + art.width*0.35 + i*artSpacing*(scale - 1);
             const double halfWidth = art.width*1.25*scale;
-            banner = cv::Rect(center - halfWidth, art.y + art.height*1.08, halfWidth*2, art.height*0.44*scale);
+            banner = cv::Rect(center - halfWidth, art.y + art.height*1.08, halfWidth*2, art.height*0.62*scale);
         }
         banner &= cv::Rect(0, 0, screenCapture.cols, screenCapture.rows);
         if(banner.width < 10 || banner.height < 5)  continue;
