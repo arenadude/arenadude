@@ -63,6 +63,8 @@ MascotWindow::MascotWindow(QWidget *parent)
     frameSteps[Sweat] = {{0, 1400}, {1, 250}, {2, 200}, {3, 200}, {4, 200}, {0, 900}};
     //Stars: three happy bounces, the sparkles drifting, then a rest
     frameSteps[Stars] = {{0, 150}, {1, 150}, {2, 150}, {3, 150}, {4, 150}, {0, 150}, {1, 150}, {2, 150}, {3, 150}, {4, 150}, {0, 150}, {1, 150}, {2, 150}, {3, 150}, {4, 150}, {0, 900}};
+    //Grin: a pleased chuckle twice, the head going back at the laugh
+    frameSteps[Grin] = {{0, 1600}, {1, 120}, {2, 260}, {3, 160}, {1, 120}, {2, 260}, {3, 200}, {0, 1200}};
     //Popcorn: a bite, then chewing
     frameSteps[Popcorn] = {{0, 1400}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 700}};
     //Blind: the cane taps right, sweeps, taps left
