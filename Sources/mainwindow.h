@@ -90,6 +90,7 @@ private:
     void createGameWatcher();
     void createCardWindow();
     static QColor mascotRarityColor(const QString &code);
+    static QColor mascotClassColor(int classOrder);
     static QStringList mascotGoodLuckLines();
     void createCardDownloader();
     void createWinratesDownloader();

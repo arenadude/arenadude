@@ -1126,7 +1126,10 @@ void MainWindow::mascotHeroes(int classOrder0, int classOrder1, int classOrder2)
 {
     static const QStringList classNames = {"Death Knight", "Demon Hunter", "Druid", "Hunter", "Mage", "Paladin",
                                            "Priest", "Rogue", "Shaman", "Warlock", "Warrior"};
-    auto className = [](int classOrder) { return (classOrder >= 0 && classOrder < classNames.count())?classNames[classOrder]:QString("?"); };
+    auto className = [](int classOrder) {
+        if(classOrder < 0 || classOrder >= classNames.count())  return QString("?");
+        return MascotWindow::colored(classNames[classOrder], mascotClassColor(classOrder));
+    };
 
     //Best and second best by winrate
     QList<QPair<float, int>> heroes;
@@ -1187,6 +1190,27 @@ QColor MainWindow::mascotRarityColor(const QString &code)
         case FREE:      return QColor(120, 120, 120);
         default:        return Qt::black;
     }
+}
+
+
+//The usual class colors (HSReplay, from WoW) darkened to read on the white bubble: Priest's white is grey, Rogue's
+//yellow a dark yellow
+QColor MainWindow::mascotClassColor(int classOrder)
+{
+    static const QColor colors[NUM_HEROS] = {
+        QColor(0xC4, 0x1E, 0x3A),   //Death Knight
+        QColor(0x9B, 0x2F, 0xC4),   //Demon Hunter
+        QColor(0xE0, 0x6A, 0x00),   //Druid
+        QColor(0x5E, 0x9A, 0x1E),   //Hunter
+        QColor(0x1A, 0x9C, 0xCB),   //Mage
+        QColor(0xD9, 0x57, 0x9A),   //Paladin
+        QColor(0x8A, 0x8A, 0x8A),   //Priest
+        QColor(0xB0, 0x95, 0x00),   //Rogue
+        QColor(0x00, 0x70, 0xDD),   //Shaman
+        QColor(0x5F, 0x5F, 0xD6),   //Warlock
+        QColor(0xA8, 0x78, 0x4A)    //Warrior
+    };
+    return (classOrder >= 0 && classOrder < NUM_HEROS) ? colors[classOrder] : QColor(Qt::black);
 }
 
 
@@ -1314,7 +1338,7 @@ void MainWindow::mascotMulligan(QString enemyHeroCode)
     mascotSaysStatus = false;
     mascotSaysMulligan = true;
     mascotWindow->setMood(MascotWindow::Detective);
-    mascotWindow->saySections(className + "s love these. In how many decks:", sections);
+    mascotWindow->saySections(MascotWindow::colored(className + "s", mascotClassColor(classOrder)) + " love these. In how many decks:", sections);
 }
 
 
