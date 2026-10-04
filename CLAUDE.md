@@ -38,6 +38,8 @@ qmake ArenaDude.pro && make        # or open ArenaDude.pro in Qt Creator, Releas
 - Resources (images, fonts) are bundled through `arenadude.qrc`. There is no `.ui` file: the windows are built in code.
 - App version is `VERSION` in `Sources/versionchecker.h`.
 
+Release: bump `VERSION`, build, `tools/package_mac.py <build>/ArenaDude.app "<out>/Arena Dude.app"` (self-contained, named and versioned, ad-hoc signed), `ditto -c -k --keepParent "Arena Dude.app" Arena.Dude.vX.Y.Z.Mac.zip`, publish a GitHub release `vX.Y.Z` with the zip, and only then append `vX.Y.Z` to `versionFree` in `Version/version.json` (it goes live on push: listing a version before its release sends users to a missing page). The app is not notarized: the release notes explain how to open it the first time (System Settings → Privacy & Security → Open Anyway) and grant Screen Recording.
+
 Debug toggles (compile-time) are the `DEBUG_*` defines in `Sources/utility.h`.
 
 ## Architecture
@@ -62,7 +64,7 @@ Debug toggles (compile-time) are the `DEBUG_*` defines in `Sources/utility.h`.
 
 The installed app downloads data directly from this repo's (`arenadude/arenadude`) `master` branch via `raw.githubusercontent.com` (URLs in `mainwindow.h`, `versionchecker.h`). Committing to these directories affects all live users immediately:
 
-- `Version/version.json` — `versionFree` lists the versions allowed to run (a version not listed is asked to update), `macUrl` the release download.
+- `Version/version.json` — `versionFree` lists the versions allowed to run (the last one is the latest; a version not listed must update or quit), `downloadUrl` the release page the update dialog opens (`vx.x` = latest), `log` the changes shown on the first run of the latest. The app never replaces itself.
 - `Arena/arenaVersion.json` — current arena card sets, `trustHA`, reset counters.
 - `HearthArena/hearthArena.json` + `haVersion.json`, `CardsJson/`, the template and mana/rarity files in `Extra/` (`MainWindow::downloadExtraFiles`) and `Images/icon.png`. The other `Images/` files are only bundled through `arenadude.qrc`.
 

@@ -5,7 +5,8 @@
 
 Runs macdeployqt, drops the Qt plugins the tracker doesn't use (and the libraries only they need),
 rewrites the absolute Homebrew paths macdeployqt leaves behind, checks that no library is loaded
-from outside the bundle, and signs the bundle ad hoc.
+from outside the bundle, names the bundle "Arena Dude" with the version of Sources/versionchecker.h
+and signs the bundle ad hoc.
 """
 import os
 import re
@@ -21,6 +22,7 @@ KEEP_PLUGINS = {
     "styles": {"libqmacstyle.dylib"},
 }
 OUTSIDE = re.compile(r"^(/opt/homebrew|/usr/local)/")
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def run(*args):
@@ -55,6 +57,12 @@ def bundled_name(dep):
     """Path of a dependency inside Contents/Frameworks."""
     match = re.search(r"([^/]+\.framework/.*)$", dep)
     return match.group(1) if match else os.path.basename(dep)
+
+
+def app_version():
+    """VERSION of Sources/versionchecker.h without its "v": v1.0.0 -> 1.0.0"""
+    with open(os.path.join(ROOT, "Sources", "versionchecker.h")) as f:
+        return re.search(r'#define VERSION QString\("v([^"]+)"\)', f.read()).group(1)
 
 
 def main():
@@ -126,6 +134,12 @@ def main():
         print("Outside the bundle:", os.path.relpath(path, out), "->", dep, file=sys.stderr)
     if leaks:
         sys.exit(1)
+
+    plist = os.path.join(contents, "Info.plist")
+    version = app_version()
+    for key, value in (("CFBundleName", "Arena Dude"), ("CFBundleDisplayName", "Arena Dude"),
+                       ("CFBundleShortVersionString", version), ("CFBundleVersion", version)):
+        run("plutil", "-replace", key, "-string", value, plist)
 
     run("codesign", "--force", "--deep", "--sign", "-", out)
     print(out)
