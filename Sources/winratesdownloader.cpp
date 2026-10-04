@@ -204,6 +204,7 @@ void WinratesDownloader::initFireCards()
             FireData fireData = futureFire[i].result();
             this->fireWRMap[i] = fireData.fireWRMap;
             this->fireSamplesMap[i] = fireData.fireSamplesMap;
+            this->fireStatsMap[i] = fireData.fireStatsMap;
             fireDataThreads--;
             if(fireDataThreads == 0)
             {
@@ -268,6 +269,13 @@ void WinratesDownloader::startProcessFireCards(const QJsonObject &jsonObject, co
             float wr = round((wins/(float)samples) * 1000)/10.0;
             fireData.fireSamplesMap.insert(code, samples);
             fireData.fireWRMap.insert(code, wr);
+
+            FireCardStats stats;
+            stats.copies = cardStatsObject.value("inStartingDeck").toInt();
+            stats.decks = samples;
+            stats.drawn = cardStatsObject.value("drawn").toInt();
+            stats.drawnWins = cardStatsObject.value("drawnThenWin").toInt();
+            fireData.fireStatsMap.insert(code, stats);
         }
         return fireData;
     });
@@ -276,3 +284,40 @@ void WinratesDownloader::startProcessFireCards(const QJsonObject &jsonObject, co
 
 
 
+
+
+//The cards of a class's decks most worth expecting from it, class cards or neutrals: ranked by their contribution,
+//copies per game x (winrate when drawn - (the class's winrate - TOP_CARDS_WINRATE_SLACK)). A strong card few decks
+//play, or a common one that wins less than its class, contributes little. Without the slack a strong class (most of
+//its cards about as good as the class) had only 2 or 3 cards left.
+QList<TopCard> WinratesDownloader::getTopCards(int classOrder, bool classCards, int count)
+{
+    QList<TopCard> topCards;
+    if(classOrder < 0 || classOrder >= NUM_HEROS)   return topCards;
+    const int games = heroGames[classOrder];
+    if(games <= 0)  return topCards;
+    const double baseWinrate = heroScores[classOrder]/100.0 - TOP_CARDS_WINRATE_SLACK;
+
+    QList<QPair<double, TopCard>> ranked;
+    for(auto it = fireStatsMap[classOrder].constBegin(); it != fireStatsMap[classOrder].constEnd(); it++)
+    {
+        const FireCardStats &stats = it.value();
+        const double deckShare = stats.decks/static_cast<double>(games);
+        if(stats.drawn < TOP_CARDS_MIN_DRAWN || deckShare < TOP_CARDS_MIN_SHARE)  continue;
+
+        const QList<CardClass> cardClasses = Utility::getClassFromCode(it.key());
+        const bool isClassCard = cardClasses.contains(static_cast<CardClass>(classOrder));
+        if(classCards != isClassCard)                           continue;
+        if(!classCards && !cardClasses.contains(NEUTRAL))       continue;
+
+        const double drawnWinrate = stats.drawnWins/static_cast<double>(stats.drawn);
+        const double contribution = stats.copies/static_cast<double>(games) * (drawnWinrate - baseWinrate);
+        if(contribution <= 0)   continue;
+        ranked << qMakePair(contribution, TopCard{it.key(), static_cast<float>(deckShare*100), static_cast<float>(drawnWinrate*100)});
+    }
+    std::sort(ranked.begin(), ranked.end(), [](const QPair<double, TopCard> &a, const QPair<double, TopCard> &b) {
+        return a.first > b.first;
+    });
+    for(int i=0; i<ranked.count() && i<count; i++)  topCards << ranked[i].second;
+    return topCards;
+}

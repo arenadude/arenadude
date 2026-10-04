@@ -39,6 +39,7 @@ private:
     QRegularExpressionMatch *match;
     bool mulliganEnemyDone, mulliganPlayerDone;
     bool spectating, tied;
+    bool enemyHeroFound;
 
 
 
@@ -77,6 +78,8 @@ signals:
     void enterArena();
     void leaveArena();
     void enemySecretPlayed();
+    void enemyHero(QString code);   //At the start of a game, before the mulligan
+    void mulliganDone();            //The player kept the hand
     void needResetDeck();
     void heroDraftDeck(QString hero="");
     void activeDraftDeck();

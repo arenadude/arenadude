@@ -24,6 +24,7 @@
 #define MASCOT_SUPPORT_WINS 5   //The support ask comes after a win, on the Ready Up screen, from these wins on
 #define MASCOT_SUPPORT_URL "https://www.patreon.com/"
 #define SCREEN_RECORDING_SETTINGS_URL "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
+#define MULLIGAN_TOP_CARDS 8     //Class cards, and as many neutrals, shown at the mulligan
 #define MASCOT_DISCORD_URL "https://discord.gg/"
 
 class MainWindow : public QMainWindow
@@ -52,6 +53,7 @@ private:
     int mascotRedraftScreenShown = 0;           //RedraftScreen the mascot talks about
     bool mascotSupportAsked = false;            //Once per arena run
     bool mascotInGame = false;
+    bool mascotSaysMulligan = false;            //The bubble shows the opponent's top cards, hidden after the mulligan
     bool splashOpen = false, initDone = false;  //The mascot shows after both
     bool mascotNoRun = false;                   //The last run ended (rewards screen) and no new draft yet
     bool mascotRetired = false;
@@ -153,6 +155,8 @@ private slots:
     void mascotStartGame();
     void mascotEndGame(bool playerWon, bool playerUnknown);
     void mascotEnemySecret();
+    void mascotMulligan(QString enemyHeroCode);
+    void mascotMulliganDone();
     void mascotRewards(int wins);
     void mascotReadyUpWins(int wins);
     void mascotDraftFinished(int knownCards, float avgFire, float avgHA);

@@ -11,12 +11,38 @@
 
 #define FIRE_CLASSES_FILE "fireClasses.json"
 
+//The opponent's top cards at the mulligan: only cards drawn enough times and in enough of the class's decks
+#define TOP_CARDS_MIN_DRAWN     200
+#define TOP_CARDS_MIN_SHARE     0.03
+//A card as good as its class still counts if it's common: compared with the class's winrate minus this
+#define TOP_CARDS_WINRATE_SLACK 0.02
+
+
+//A card's games in the decks of one class (Firestone)
+class FireCardStats
+{
+public:
+    int copies = 0;         //Copies in the starting decks (inStartingDeck): 2 copies count twice
+    int decks = 0;          //Decks with the card
+    int drawn = 0, drawnWins = 0;
+};
+
 
 class FireData
 {
 public:
     QMap<QString, float> fireWRMap;
     QMap<QString, int> fireSamplesMap;
+    QMap<QString, FireCardStats> fireStatsMap;
+};
+
+
+//A card the opponent's class often plays and wins with
+struct TopCard
+{
+    QString code;
+    float deckShare;        //% of the class's decks with it
+    float drawnWinrate;     //% of games won when drawn
 };
 
 
@@ -35,6 +61,7 @@ private:
     int fireDataThreads;
     QMap<QString, float> *fireWRMap;
     QMap<QString, int> *fireSamplesMap;
+    QMap<QString, FireCardStats> fireStatsMap[NUM_HEROS];
     static float heroScores[NUM_HEROS];     //Arena winrate of each class (Firestone)
     static int heroGames[NUM_HEROS];
 
@@ -54,6 +81,7 @@ public:
     void waitFinishThreads();
     static float getHeroScore(int classOrder);
     static int getHeroGames(int classOrder);
+    QList<TopCard> getTopCards(int classOrder, bool classCards, int count);
 
 signals:
     void pDebug(QString line, DebugLevel debugLevel=Normal, QString file="WinratesDownloader");

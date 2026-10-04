@@ -690,6 +690,10 @@ void MainWindow::createMascotWindow()
             this, SLOT(mascotEndGame(bool,bool)));
     connect(gameWatcher, SIGNAL(enemySecretPlayed()),
             this, SLOT(mascotEnemySecret()));
+    connect(gameWatcher, SIGNAL(enemyHero(QString)),
+            this, SLOT(mascotMulligan(QString)));
+    connect(gameWatcher, SIGNAL(mulliganDone()),
+            this, SLOT(mascotMulliganDone()));
     connect(draftHandler, SIGNAL(redraftScreenChanged(int)),
             this, SLOT(mascotRedraftScreen(int)));
     connect(arenaHandler, SIGNAL(arenaRecordChanged(int,int,bool)),
@@ -1274,6 +1278,53 @@ void MainWindow::mascotStartGame()
 }
 
 
+//At the mulligan of an arena game: the cards the opponent's class plays most and wins most with (Firestone), its own
+//and the neutrals it takes. Hovering a row shows the card.
+void MainWindow::mascotMulligan(QString enemyHeroCode)
+{
+    if(!mascotLive || !mascotInGame || getLoadingScreen() != arena)     return;
+    const QList<CardClass> classes = Utility::getClassFromCode(enemyHeroCode);
+    if(classes.isEmpty() || classes.first() >= NUM_HEROS)
+    {
+        pDebug("Mulligan: unknown class of the enemy hero " + enemyHeroCode, DebugLevel::Warning);
+        return;
+    }
+    const int classOrder = classes.first();
+    const QString className = Utility::classOrder2classUL_ULName(classOrder);
+
+    QList<MascotWindow::Section> sections;
+    for(const bool classCards: {true, false})
+    {
+        MascotWindow::Section section{classCards ? className : QStringLiteral("Neutral"), {}};
+        const QList<TopCard> topCards = winratesDownloader->getTopCards(classOrder, classCards, MULLIGAN_TOP_CARDS);
+        for(const TopCard &card: topCards)
+        {
+            section.rows << MascotWindow::Row{Utility::cardLocalNameFromCode(card.code),
+                                              QStringLiteral("%1% · %2%").arg(qRound(card.drawnWinrate)).arg(qRound(card.deckShare)),
+                                              card.code, mascotRarityColor(card.code)};
+        }
+        if(!section.rows.isEmpty())     sections << section;
+    }
+    pDebug("Mulligan: enemy " + className + ", " + QString::number(sections.count()) + " sections of top cards.");
+    if(sections.isEmpty())  return;
+
+    mascotSaysAdvice = false;
+    mascotSaysStatus = false;
+    mascotSaysMulligan = true;
+    mascotWindow->setMood(MascotWindow::Detective);
+    mascotWindow->saySections("A " + className + ". Expect these (win rate when drawn · decks):", sections);
+}
+
+
+void MainWindow::mascotMulliganDone()
+{
+    if(!mascotSaysMulligan)     return;
+    mascotSaysMulligan = false;
+    mascotWindow->setMood(MascotWindow::Popcorn);
+    mascotWindow->say("");
+}
+
+
 //Secrets are not read yet: the mascot only notices them, and the first time asks for support to learn it
 void MainWindow::mascotEnemySecret()
 {
@@ -1309,6 +1360,7 @@ void MainWindow::mascotEndGame(bool playerWon, bool playerUnknown)
 {
     if(!mascotLive)     return;
     mascotSaysStatus = false;
+    mascotSaysMulligan = false;
     mascotInGame = false;
     if(playerUnknown)
     {

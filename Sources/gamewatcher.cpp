@@ -21,6 +21,7 @@ void GameWatcher::reset()
     arenaState = noDeckRead;
     loadingScreenState = menu;
     mulliganEnemyDone = mulliganPlayerDone = false;
+    enemyHeroFound = false;
     spectating = false;
     tied = true;
     emit pDebug("Reset (powerState = noGame).", 0);
@@ -376,6 +377,7 @@ void GameWatcher::processPower(QString &line, qint64 numLine)
         powerState = heroType1State;
 
         mulliganEnemyDone = mulliganPlayerDone = false;
+        enemyHeroFound = false;
 
         hero1.clear();
         hero2.clear();
@@ -529,6 +531,7 @@ void GameWatcher::processPowerMulligan(QString &line, qint64 numLine)
             {
                 emit pDebug("Player mulligan end.", numLine);
                 mulliganPlayerDone = true;
+                emit mulliganDone();
 
                 if(mulliganEnemyDone)
                 {
@@ -566,7 +569,8 @@ void GameWatcher::processPowerMulligan(QString &line, qint64 numLine)
 }
 
 
-//Only what the mascot needs: an enemy secret, and the player's hero, which tells which player we are (who won)
+//Only what the mascot needs: an enemy secret, the enemy's hero (its class, for the mulligan) and the player's hero,
+//which tells which player we are (who won)
 void GameWatcher::processZone(QString &line, qint64 numLine)
 {
     if(powerState == noGame)   return;
@@ -579,6 +583,18 @@ void GameWatcher::processZone(QString &line, qint64 numLine)
     {
         emit pDebug("Enemy: Secret played. ID: " + match->captured(1), numLine);
         emit enemySecretPlayed();
+    }
+
+    //[entityName=Deathwing id=66 zone=PLAY zonePos=0 cardId=HERO_01c player=2] zone from  -> OPPOSING PLAY (Hero)
+    //Only the first one: a hero card played later moves to OPPOSING PLAY (Hero) too
+    else if(!enemyHeroFound && line.contains(QRegularExpression(
+        "\\[entityName=(.*) id=\\d+ zone=\\w+ zonePos=\\d+ cardId=(\\w+) player=\\d+\\] zone from "
+        ".* -> OPPOSING PLAY \\(Hero\\)"
+        ), match))
+    {
+        enemyHeroFound = true;
+        emit pDebug("Enemy: Hero moved to OPPOSING PLAY (Hero): " + match->captured(1) + " " + match->captured(2), numLine);
+        emit enemyHero(match->captured(2));
     }
 
     //[entityName=Jaina id=64 zone=PLAY zonePos=0 cardId=HERO_08 player=1] zone from  -> FRIENDLY PLAY (Hero)
