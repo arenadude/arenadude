@@ -286,6 +286,7 @@ private:
     void setRedraftReviewCodes(const QStringList &codes);
     void startBundlePreview(const QString &code);
     void confirmBundle();
+    void checkScreenAgain(const QString &reason);
     void resetBundle();
     void readDeckList();
     void buildBundleNameMap();

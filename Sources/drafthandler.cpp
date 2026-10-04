@@ -2063,6 +2063,9 @@ void DraftHandler::confirmBundle()
     bundlePreviews.clear();
 
     emit pDebug("Bundle picked: " + legendary + " + " + codes.join(" "));
+    //The screen was found on the legendaries, bigger and higher than the cards of a trio: the plates of this first
+    //trio sat too high, over the cards
+    checkScreenAgain("after the legendary group");
     emit newDeckCard(legendary);
     for(const QString &code: codes)     emit newDeckCard(code);
 
@@ -2076,6 +2079,18 @@ void DraftHandler::confirmBundle()
         setDraftStatus("Scanning the deck list...");
         QTimer::singleShot(1500, this, [this]() {readDeckList();});
     }
+}
+
+
+//Looks for the arena screen once more, soon: a changed layout is "Not the same" and places the plates again
+void DraftHandler::checkScreenAgain(const QString &reason)
+{
+    QTimer::singleShot(FINDSCREEN_VERIFY_TIME, this, [this, reason]() {
+        if(findingFrame || stopLoops || screenIndex == -1)  return;
+        emit pDebug("Checking the arena screen again " + reason + ".");
+        findingFrame = true;
+        startFindScreenRects();
+    });
 }
 
 
@@ -3253,15 +3268,7 @@ void DraftHandler::finishFindScreenRects()
 
             //The slow end of the arena intro zoom passes the stable check: look once more, a moved screen
             //is "Not the same" and places the plates again
-            if(drafting || heroDrafting)
-            {
-                QTimer::singleShot(FINDSCREEN_VERIFY_TIME, this, [this]() {
-                    if(findingFrame || stopLoops || screenIndex == -1)  return;
-                    emit pDebug("Checking the arena screen again after the intro.");
-                    findingFrame = true;
-                    startFindScreenRects();
-                });
-            }
+            if(drafting || heroDrafting)    checkScreenAgain("after the intro");
         }
         else
         {
