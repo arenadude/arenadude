@@ -286,11 +286,11 @@ void WinratesDownloader::startProcessFireCards(const QJsonObject &jsonObject, co
 
 
 
-//The cards of a class's decks most worth expecting from it, class cards or neutrals: ranked by their contribution,
+//The cards of a class's decks most worth expecting from it, its own and neutrals alike: ranked by their contribution,
 //copies per game x (winrate when drawn - (the class's winrate - TOP_CARDS_WINRATE_SLACK)). A strong card few decks
 //play, or a common one that wins less than its class, contributes little. Without the slack a strong class (most of
 //its cards about as good as the class) had only 2 or 3 cards left.
-QList<TopCard> WinratesDownloader::getTopCards(int classOrder, bool classCards, int count)
+QList<TopCard> WinratesDownloader::getTopCards(int classOrder, int count)
 {
     QList<TopCard> topCards;
     if(classOrder < 0 || classOrder >= NUM_HEROS)   return topCards;
@@ -306,9 +306,7 @@ QList<TopCard> WinratesDownloader::getTopCards(int classOrder, bool classCards, 
         if(stats.drawn < TOP_CARDS_MIN_DRAWN || deckShare < TOP_CARDS_MIN_SHARE)  continue;
 
         const QList<CardClass> cardClasses = Utility::getClassFromCode(it.key());
-        const bool isClassCard = cardClasses.contains(static_cast<CardClass>(classOrder));
-        if(classCards != isClassCard)                           continue;
-        if(!classCards && !cardClasses.contains(NEUTRAL))       continue;
+        if(!cardClasses.contains(static_cast<CardClass>(classOrder)) && !cardClasses.contains(NEUTRAL))   continue;
 
         const double drawnWinrate = stats.drawnWins/static_cast<double>(stats.drawn);
         const double contribution = stats.copies/static_cast<double>(games) * (drawnWinrate - baseWinrate);

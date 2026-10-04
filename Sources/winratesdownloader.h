@@ -81,7 +81,7 @@ public:
     void waitFinishThreads();
     static float getHeroScore(int classOrder);
     static int getHeroGames(int classOrder);
-    QList<TopCard> getTopCards(int classOrder, bool classCards, int count);
+    QList<TopCard> getTopCards(int classOrder, int count);
 
 signals:
     void pDebug(QString line, DebugLevel debugLevel=Normal, QString file="WinratesDownloader");

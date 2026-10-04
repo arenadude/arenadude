@@ -24,8 +24,7 @@
 #define MASCOT_SUPPORT_WINS 5   //The support ask comes after a win, on the Ready Up screen, from these wins on
 #define MASCOT_SUPPORT_URL "https://www.patreon.com/"
 #define SCREEN_RECORDING_SETTINGS_URL "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
-#define MULLIGAN_TOP_CARDS 10        //Cards shown at the mulligan...
-#define MULLIGAN_NEUTRAL_CARDS 3     //...of which neutrals, when the class plays enough of them (else class cards fill in)
+#define MULLIGAN_TOP_CARDS 10        //Cards shown at the mulligan
 #define MASCOT_DISCORD_URL "https://discord.gg/"
 
 class MainWindow : public QMainWindow

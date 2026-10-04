@@ -1279,7 +1279,7 @@ void MainWindow::mascotStartGame()
 
 
 //At the mulligan of an arena game: the cards the opponent's class plays most and wins most with (Firestone), its own
-//and the neutrals it takes, by mana cost, with the share of decks playing them. The win rate only picks them: on a
+//and neutrals alike, by mana cost, with the share of decks playing them. The win rate only picks them: on a
 //first look two numbers per row didn't say which is which. Hovering a row shows the card.
 void MainWindow::mascotMulligan(QString enemyHeroCode)
 {
@@ -1293,30 +1293,21 @@ void MainWindow::mascotMulligan(QString enemyHeroCode)
     const int classOrder = classes.first();
     const QString className = Utility::classOrder2classUL_ULName(classOrder);
 
-    //Neutrals are spread over every class: most classes play few of them, and their places go to class cards
-    QList<TopCard> classCards = winratesDownloader->getTopCards(classOrder, true, MULLIGAN_TOP_CARDS);
-    QList<TopCard> neutralCards = winratesDownloader->getTopCards(classOrder, false, MULLIGAN_TOP_CARDS);
-    int numNeutral = std::min<int>(MULLIGAN_NEUTRAL_CARDS, neutralCards.count());
-    const int numClass = std::min<int>(MULLIGAN_TOP_CARDS - numNeutral, classCards.count());
-    numNeutral = std::min<int>(MULLIGAN_TOP_CARDS - numClass, neutralCards.count());
-    classCards = classCards.mid(0, numClass);
-    neutralCards = neutralCards.mid(0, numNeutral);
-
+    //One list, class cards and neutrals alike: a neutral only shows if the class really plays it (the class's own
+    //cards are far more common, so neutrals in their own section were 1 in 5 decks at best)
+    QList<TopCard> topCards = winratesDownloader->getTopCards(classOrder, MULLIGAN_TOP_CARDS);
     auto cost = [](const TopCard &card) { return Utility::getCardAttribute(card.code, "cost").toInt(); };
-    QList<MascotWindow::Section> sections;
-    for(QList<TopCard> *cards: {&classCards, &neutralCards})
+    std::stable_sort(topCards.begin(), topCards.end(), [&](const TopCard &a, const TopCard &b) { return cost(a) < cost(b); });
+    MascotWindow::Section section{QString(), {}};
+    for(const TopCard &card: std::as_const(topCards))
     {
-        std::stable_sort(cards->begin(), cards->end(), [&](const TopCard &a, const TopCard &b) { return cost(a) < cost(b); });
-        MascotWindow::Section section{(cards == &classCards) ? className : QStringLiteral("Neutral"), {}};
-        for(const TopCard &card: std::as_const(*cards))
-        {
-            section.rows << MascotWindow::Row{QStringLiteral("(%1) ").arg(cost(card)) + Utility::cardLocalNameFromCode(card.code),
-                                              QStringLiteral("%1%").arg(qRound(card.deckShare)),
-                                              card.code, mascotRarityColor(card.code)};
-        }
-        if(!section.rows.isEmpty())     sections << section;
+        section.rows << MascotWindow::Row{QStringLiteral("(%1) ").arg(cost(card)) + Utility::cardLocalNameFromCode(card.code),
+                                          QStringLiteral("%1%").arg(qRound(card.deckShare)),
+                                          card.code, mascotRarityColor(card.code)};
     }
-    pDebug("Mulligan: enemy " + className + ", " + QString::number(sections.count()) + " sections of top cards.");
+    QList<MascotWindow::Section> sections;
+    if(!section.rows.isEmpty())     sections << section;
+    pDebug("Mulligan: enemy " + className + ", " + QString::number(section.rows.count()) + " top cards.");
     if(sections.isEmpty())  return;
 
     mascotSaysAdvice = false;

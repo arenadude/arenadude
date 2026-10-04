@@ -125,8 +125,9 @@ void MascotWindow::relayout()
         for(const Section &section: std::as_const(sections))
         {
             if(sectionsH > 0)   sectionsH += MASCOT_SECTION_GAP;
-            headerRects << QRect(0, sectionsH, sectionsW, lineH);
-            sectionsH += lineH;
+            //No header (one list): no header line
+            headerRects << QRect(0, sectionsH, sectionsW, section.header.isEmpty() ? 0 : lineH);
+            if(!section.header.isEmpty())   sectionsH += lineH;
             QList<QRect> rects;
             for(int i=0; i<section.rows.count(); i++)
             {
