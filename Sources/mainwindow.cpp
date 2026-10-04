@@ -800,7 +800,7 @@ void MainWindow::mascotDraftStatus(QString text)
     QString line = text;
     if(text.contains("Game Mode"))
     {
-        mood = MascotWindow::Smug;
+        mood = MascotWindow::Point;
         line = "Everything's under control. But macOS Game Mode slows me down: turn it off with the gamepad icon in the menu bar.";
     }
     else if(text.startsWith("Can't see the arena screen"))
@@ -933,7 +933,7 @@ void MainWindow::mascotDraftFinished(int knownCards, float avgFire, float avgHA)
     mascotSaysStatus = false;
 
     QString line;
-    MascotWindow::Mood mood = MascotWindow::Smug;
+    MascotWindow::Mood mood = MascotWindow::Point;
     if(avgFire > 0 || avgHA > 0)
     {
         //Thresholds are a first guess of what a good arena deck averages
@@ -990,7 +990,7 @@ void MainWindow::mascotRedraftScreen(int screen)
     }
     else if(screen == RedraftScreenReadyUp)
     {
-        mascotWindow->setMood(MascotWindow::Smug);
+        mascotWindow->setMood(MascotWindow::Smile);
         mascotWindow->say("Deck's ready. " + mascotPick(mascotGoodLuckLines()), 10000);
     }
     else

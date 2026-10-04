@@ -16,7 +16,7 @@ class MascotWindow : public QWidget
 {
     Q_OBJECT
 public:
-    enum Mood { Idle, Popcorn, Thinking, Point, Smile, Grin, Smug, Happy, Sweat, Grabbed, Stars, Detective, Blind, NumMoods };
+    enum Mood { Idle, Popcorn, Thinking, Point, Smile, Grin, Happy, Sweat, Grabbed, Stars, Detective, Blind, NumMoods };
 
     //A section of name/value rows under the text (e.g. the cards to remove by one score source).
     //Rows with a card code show the card when hovered.

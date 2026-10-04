@@ -33,9 +33,9 @@ MascotWindow::MascotWindow(QWidget *parent)
     setWindowTitle("AT Mascot");
 
     //Moods without their own art yet use a close one
-    const char *files[NumMoods] = {"idle", "popcorn", "thinking", "point", "smile", "grin", "smug", "happy", "sweat",
+    const char *files[NumMoods] = {"idle", "popcorn", "thinking", "point", "smile", "grin", "happy", "sweat",
                                    "grabbed", "stars", "detective", "blind"};
-    const Mood fallbacks[NumMoods] = {Idle, Popcorn, Thinking, Point, Smile, Grin, Smug, Happy, Sweat, Sweat, Happy, Thinking, Sweat};
+    const Mood fallbacks[NumMoods] = {Idle, Popcorn, Thinking, Point, Smile, Grin, Happy, Sweat, Sweat, Happy, Thinking, Sweat};
     for(int i=0; i<NumMoods; i++)   sprites[i] = QPixmap(QStringLiteral(":/Images/Mascot/%1.png").arg(files[i]));
     for(int i=0; i<NumMoods; i++)   if(sprites[i].isNull())     sprites[i] = sprites[fallbacks[i]];
 
