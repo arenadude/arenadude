@@ -763,8 +763,14 @@ void MainWindow::mascotDraftStatus(QString text)
     }
     else if(text.startsWith("Can't see the arena screen"))
     {
-        mood = MascotWindow::Sweat;
+        mood = MascotWindow::Blind;
         line = "I can't see the arena! Give me Screen Recording permission and I'm all yours.";
+        mascotWindow->setMood(mood);
+        mascotWindow->say(line, 0, "Open Settings", []() {
+            QDesktopServices::openUrl(QUrl(SCREEN_RECORDING_SETTINGS_URL));
+        });
+        mascotSaysStatus = true;
+        return;
     }
     else if(text.startsWith("Looking for the discard screen"))
     {
@@ -825,7 +831,7 @@ void MainWindow::mascotGreeting()
     //Without it the mascot sees no draft: asked first. Stays until something else is said.
     if(!screenRecording)
     {
-        mascotWindow->setMood(MascotWindow::Sweat);
+        mascotWindow->setMood(MascotWindow::Blind);
         //The log settings written now aren't checked again at the next start: Hearthstone's restart is asked here too
         QString line = "I can't see your screen yet. Allow me in System Settings > Privacy & Security > "
                        "Screen Recording, then restart me.";
@@ -833,7 +839,7 @@ void MainWindow::mascotGreeting()
             line += " Restart Hearthstone too, so I can read its logs.";
         //Opens System Settings on the Screen Recording list (macOS offers "Quit & Reopen" once it's turned on)
         mascotWindow->say(line, 0, "Open Settings", []() {
-            QDesktopServices::openUrl(QUrl("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"));
+            QDesktopServices::openUrl(QUrl(SCREEN_RECORDING_SETTINGS_URL));
         });
     }
     //First run with Hearthstone already open: it only logs after a restart. Stays until something else is said.

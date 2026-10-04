@@ -27,6 +27,9 @@
 #define CAPTUREDRAFT_LOOP_TIME          100
 #define CAPTUREDRAFT_LOOP_TIME_FADING   200
 #define CAPTUREDRAFT_LOOP_TIME_REDRAFT  500
+#define CAPTUREDRAFT_RETRY_TIME         500     //After a failed screenshot
+#define CAPTUREDRAFT_MAX_FAILS          10      //Failed screenshots in a row before the screen is looked for again
+#define HERO_CAPTURE_RESCAN_TIME        8000    //Heroes not read by then: the screen is looked for again
 
 #define CARD_ACCEPTED_THRESHOLD             0.35
 #define CARD_ACCEPTED_THRESHOLD_REDRAFT     0.4
@@ -144,6 +147,8 @@ private:
     QPointF screenScale;
     int screenIndex;
     int numCaptured;
+    int captureFails = 0;                 //Screenshots failed in a row by the capture loop
+    QElapsedTimer heroCaptureClock;        //From the start of the hero capture loop to the heroes read
     bool drafting, heroDrafting, redrafting, redraftingReview, capturing, findingFrame, stopLoops;
     bool heroesShown = false;   //The current heroes are scored (heroesScored)
     bool redraftPicksSeen = false;  //OCR read card names on the redraft's pick screen: REDRAFTING alone only offers it

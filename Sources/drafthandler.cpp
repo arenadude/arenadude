@@ -1417,6 +1417,7 @@ void DraftHandler::newCaptureDraftLoop(bool delayed)
         ((drafting && !lightForgeTiers.empty() && !hearthArenaTiers.empty()) || heroDrafting || redraftingReview))
     {
         capturing = true;
+        if(heroDrafting)    heroCaptureClock.start();
 
         if(delayed)                 QTimer::singleShot(CAPTUREDRAFT_DELAY_TIME, this, SLOT(captureDraft()));
         else                        captureDraft();
@@ -1444,16 +1445,48 @@ void DraftHandler::captureDraft()
     else
     {
         cv::MatND screenCardsHist[3];
+        //A failed screenshot (e.g. while macOS asks to allow the screen capture) is tried again: stopping here
+        //left the loop dead until the arena screen was looked for again
         if(!getScreenCardsHist(screenCardsHist, 3))
         {
-            capturing = false;
+            if(captureFails++ == 0)     emit pDebug("Screen capture failed. Retrying...", Warning);
+            //Still failing (e.g. Hearthstone's window moved and the rects are off the screen): look for the screen again
+            if(captureFails >= CAPTUREDRAFT_MAX_FAILS)
+            {
+                emit pDebug("Screen capture failed " + QString::number(captureFails) + " times: looking for the arena screen again.");
+                captureFails = 0;
+                capturing = false;
+                rescan();
+                return;
+            }
+            QTimer::singleShot(CAPTUREDRAFT_RETRY_TIME, this, SLOT(captureDraft()));
             return;
         }
+        if(captureFails > 0)
+        {
+            emit pDebug("Screen capture back after " + QString::number(captureFails) + " failures.");
+            captureFails = 0;
+        }
         mapBestMatchingCodes(screenCardsHist);
+        const bool cardsDetected = areCardsDetected();
 
-        if(areCardsDetected())
+        //Heroes not read for a while: the screen found may be the wrong one (found while a macOS dialog covered it,
+        //or before Hearthstone's window settled). Look for it again, like the mascot's Rescan.
+        if(heroDrafting && !cardsDetected && heroCaptureClock.isValid() &&
+            heroCaptureClock.elapsed() > HERO_CAPTURE_RESCAN_TIME)
+        {
+            emit pDebug("Heroes not read in " + QString::number(HERO_CAPTURE_RESCAN_TIME/1000) +
+                        " s: looking for the arena screen again.");
+            capturing = false;
+            heroCaptureClock.invalidate();
+            rescan();
+            return;
+        }
+
+        if(cardsDetected)
         {
             capturing = false;
+            heroCaptureClock.invalidate();
             buildBestMatchesMaps();
 
             if(drafting)
