@@ -734,7 +734,8 @@ void MainWindow::mascotDraftStatus(QString text)
     {
         const bool newPickOrProblem = (text.startsWith("Scanning") && !text.startsWith("Scanning the deck list")) ||
                                       text.startsWith("Looking for the arena") ||
-                                      text.startsWith("Can't see") || text.contains("Game Mode");
+                                      text.startsWith("Can't see") || text.contains("Game Mode") ||
+                                      text.startsWith("macOS asks to allow");
         if(!newPickOrProblem)   return;
         mascotSaysAdvice = false;
     }
@@ -771,6 +772,11 @@ void MainWindow::mascotDraftStatus(QString text)
         });
         mascotSaysStatus = true;
         return;
+    }
+    else if(text.startsWith("macOS asks to allow"))
+    {
+        mood = MascotWindow::Blind;
+        line = "macOS is asking if I can see your screen. Hit Allow and I'm back in business.";
     }
     else if(text.startsWith("Looking for the discard screen"))
     {
