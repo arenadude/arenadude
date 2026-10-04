@@ -55,6 +55,8 @@ MascotWindow::MascotWindow(QWidget *parent)
     frameSteps[Smile] = {{0, 2200}, {1, 450}, {0, 1800}, {2, 700}};
     //Thinking: the finger taps the chin, a glance up, the eyes narrow
     frameSteps[Thinking] = {{0, 1500}, {3, 200}, {0, 200}, {3, 200}, {0, 200}, {3, 200}, {0, 1200}, {1, 1500}, {0, 1200}, {2, 800}};
+    //Point: the raised finger wags twice (its frames are wider: the tilted finger goes past the still sprite's edge)
+    frameSteps[Point] = {{0, 1500}, {1, 180}, {2, 180}, {1, 180}, {0, 180}, {1, 180}, {2, 180}, {1, 180}};
     //Popcorn: a bite, then chewing
     frameSteps[Popcorn] = {{0, 1400}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 700}};
     //Blind: the cane taps right, sweeps, taps left
