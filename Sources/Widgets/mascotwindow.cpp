@@ -61,6 +61,8 @@ MascotWindow::MascotWindow(QWidget *parent)
     frameSteps[Detective] = {{0, 900}, {1, 700}, {0, 300}, {2, 700}, {0, 900}, {3, 70}, {4, 70}, {5, 70}, {0, 600}};
     //Sweat: a drop of sweat runs down the temple
     frameSteps[Sweat] = {{0, 1400}, {1, 250}, {2, 200}, {3, 200}, {4, 200}, {0, 900}};
+    //Stars: three happy bounces, the sparkles drifting, then a rest
+    frameSteps[Stars] = {{0, 150}, {1, 150}, {2, 150}, {3, 150}, {4, 150}, {0, 150}, {1, 150}, {2, 150}, {3, 150}, {4, 150}, {0, 150}, {1, 150}, {2, 150}, {3, 150}, {4, 150}, {0, 900}};
     //Popcorn: a bite, then chewing
     frameSteps[Popcorn] = {{0, 1400}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 700}};
     //Blind: the cane taps right, sweeps, taps left
