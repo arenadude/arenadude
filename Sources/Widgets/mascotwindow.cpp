@@ -57,6 +57,8 @@ MascotWindow::MascotWindow(QWidget *parent)
     frameSteps[Thinking] = {{0, 1500}, {3, 200}, {0, 200}, {3, 200}, {0, 200}, {3, 200}, {0, 1200}, {1, 1500}, {0, 1200}, {2, 800}};
     //Point: the raised finger wags twice (its frames are wider: the tilted finger goes past the still sprite's edge)
     frameSteps[Point] = {{0, 1500}, {1, 180}, {2, 180}, {1, 180}, {0, 180}, {1, 180}, {2, 180}, {1, 180}};
+    //Detective: the eye in the magnifier looks left and right, then a glint runs across the glass
+    frameSteps[Detective] = {{0, 900}, {1, 700}, {0, 300}, {2, 700}, {0, 900}, {3, 70}, {4, 70}, {5, 70}, {0, 600}};
     //Popcorn: a bite, then chewing
     frameSteps[Popcorn] = {{0, 1400}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 700}};
     //Blind: the cane taps right, sweeps, taps left
