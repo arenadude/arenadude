@@ -59,6 +59,8 @@ MascotWindow::MascotWindow(QWidget *parent)
     frameSteps[Point] = {{0, 1500}, {1, 180}, {2, 180}, {1, 180}, {0, 180}, {1, 180}, {2, 180}, {1, 180}};
     //Detective: the eye in the magnifier looks left and right, then a glint runs across the glass
     frameSteps[Detective] = {{0, 900}, {1, 700}, {0, 300}, {2, 700}, {0, 900}, {3, 70}, {4, 70}, {5, 70}, {0, 600}};
+    //Sweat: a drop of sweat runs down the temple
+    frameSteps[Sweat] = {{0, 1400}, {1, 250}, {2, 200}, {3, 200}, {4, 200}, {0, 900}};
     //Popcorn: a bite, then chewing
     frameSteps[Popcorn] = {{0, 1400}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 700}};
     //Blind: the cane taps right, sweeps, taps left
