@@ -1104,7 +1104,7 @@ void MainWindow::mascotRewards(int wins)
         line = QStringLiteral("%1 wins! ").arg(wins) + mascotPick({"That's a monster run. Told you that deck was good.",
                                                                      "What a run. We make a great team. Mostly me."});
     }
-    else if(wins >= MASCOT_SUPPORT_WINS)
+    else if(wins >= MASCOT_SOLID_RUN_WINS)
     {
         mood = MascotWindow::Grin;
         line = QStringLiteral("%1 wins. ").arg(wins) + mascotPick({"Solid run, enjoy the loot.",

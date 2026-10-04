@@ -21,7 +21,9 @@
 
 
 //TODO: the Patreon page and the Discord server, once they exist
-#define MASCOT_SUPPORT_WINS 5   //The support ask comes after a win, on the Ready Up screen, from these wins on
+#define MASCOT_SUPPORT_WINS 4   //The support ask comes after a win, on the Ready Up screen, from these wins on:
+                                //a normal arena run ends at 5 wins, so 5 came too late
+#define MASCOT_SOLID_RUN_WINS 5 //A run ending with these wins or more is praised
 #define MASCOT_SUPPORT_URL "https://www.patreon.com/"
 #define SCREEN_RECORDING_SETTINGS_URL "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
 #define MULLIGAN_TOP_CARDS 10        //Cards shown at the mulligan
