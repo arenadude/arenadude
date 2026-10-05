@@ -65,8 +65,8 @@ MascotWindow::MascotWindow(QWidget *parent)
     frameSteps[Stars] = {{0, 150}, {1, 150}, {2, 150}, {3, 150}, {4, 150}, {0, 150}, {1, 150}, {2, 150}, {3, 150}, {4, 150}, {0, 150}, {1, 150}, {2, 150}, {3, 150}, {4, 150}, {0, 900}};
     //Grin: a pleased chuckle twice, the head going back at the laugh
     frameSteps[Grin] = {{0, 1600}, {1, 120}, {2, 260}, {3, 160}, {1, 120}, {2, 260}, {3, 200}, {0, 1200}};
-    //Happy: a fist pump, "Yes!" (its sprites are wider: the fist goes past the head's edge)
-    frameSteps[Happy] = {{0, 1000}, {1, 130}, {0, 130}, {1, 130}, {2, 700}, {0, 900}};
+    //Happy: a rest, then the victory jump: a crouch, the burst, the hat flying off at the peak, the landing, settling
+    frameSteps[Happy] = {{5, 1400}, {0, 260}, {1, 110}, {2, 380}, {3, 150}, {4, 280}};
     //Popcorn: a bite, then chewing
     frameSteps[Popcorn] = {{0, 1400}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 700}};
     //Blind: the cane taps right, sweeps, taps left
