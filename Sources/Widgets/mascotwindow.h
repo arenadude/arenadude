@@ -43,6 +43,7 @@ public:
     Mood currentMood() const { return mood; }
     //The moods with frames (<mood>_0.png, <mood>_1.png...) play them instead of their still sprite
     void setAnimated(bool animated);
+    bool isAnimated() const { return animated; }
 private:
     const QPixmap &currentSprite() const;
 public:
@@ -58,6 +59,7 @@ signals:
     void discordRequested();
     void supportRequested();
     void reportRequested();     //Report a problem: the log and the Discord
+    void unlockRequested();     //Unlock the animated mascot with a patron code
     void said(const QString &text);     //For the log
     void cardEntered(QString code, QRect rectCard, int maxTop, int maxBottom);
     void cardLeave();

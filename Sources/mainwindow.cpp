@@ -271,6 +271,11 @@ void MainWindow::replyFinished(QNetworkReply *reply)
             int haVersion = QJsonDocument::fromJson(reply->readAll()).object().value("haVersion").toInt();
             downloadHearthArenaJson(haVersion);
         }
+        //Patron codes: an unlock being checked, or the saved code checked again
+        else if(endUrl == "patronCodes.json")
+        {
+            checkPatronCodes(reply->readAll());
+        }
         //HearthArena json
         else if(endUrl == "hearthArena.json")
         {
@@ -654,6 +659,70 @@ void MainWindow::closeApp()
 }
 
 
+//The code a patron types, as the hashes in patronCodes.json: spaces and dashes don't count, nor the case
+QString MainWindow::patronCodeHash(const QString &code)
+{
+    QString normalized;
+    for(const QChar &c: code.toUpper())     if(c.isLetterOrNumber())    normalized += c;
+    return QCryptographicHash::hash((PATRON_CODE_SALT + normalized).toUtf8(), QCryptographicHash::Sha256).toHex();
+}
+
+
+//The unlock dialog: the code is checked when the code list arrives (checkPatronCodes)
+void MainWindow::unlockPatron()
+{
+    bool ok = false;
+    const QString code = QInputDialog::getText(nullptr, "Arena Dude", "Your patron code (from the Patreon post for patrons):",
+                                               QLineEdit::Normal, "", &ok).trimmed();
+    if(!ok || code.isEmpty())   return;
+    patronPendingCode = code;
+    networkManager->get(QNetworkRequest(QUrl(PATRON_CODES_URL)));
+}
+
+
+//A typed code unlocks the animated mascot; the saved one stays valid while its hash is in the list
+void MainWindow::checkPatronCodes(const QByteArray &data)
+{
+    const QJsonArray hashes = QJsonDocument::fromJson(data).object().value("codes").toArray();
+    auto valid = [&hashes](const QString &code) {
+        const QString hash = patronCodeHash(code);
+        for(const QJsonValue &v: hashes)    if(v.toString() == hash)    return true;
+        return false;
+    };
+    QSettings settings;
+
+    if(!patronPendingCode.isEmpty())
+    {
+        const QString code = patronPendingCode;
+        patronPendingCode.clear();
+        if(valid(code))
+        {
+            pDebug("Patron: code accepted.");
+            settings.setValue("patronCode", code);
+            settings.setValue("patronUnlocked", true);
+            mascotWindow->setAnimated(true);
+            mascotWindow->setMood(MascotWindow::Happy);
+            mascotWindow->say("You're a patron? You legend! Thanks for keeping me going. Watch me move now.", 12000);
+        }
+        else
+        {
+            pDebug("Patron: code rejected.");
+            mascotWindow->setMood(MascotWindow::Sweat);
+            mascotWindow->say("Hmm, that code doesn't work. Codes change now and then: check the latest patron post.", 12000);
+        }
+        return;
+    }
+
+    //The saved code is checked at every start: a code taken off the list turns the animation off
+    const QString saved = settings.value("patronCode").toString();
+    if(saved.isEmpty() || valid(saved))     return;
+    pDebug("Patron: the saved code is no longer valid.");
+    settings.remove("patronCode");
+    settings.setValue("patronUnlocked", false);
+    if(!settings.value("mascotAnimated", false).toBool())   mascotWindow->setAnimated(false);
+}
+
+
 //One of the lines at random, so the mascot doesn't repeat itself
 static QString mascotPick(const QStringList &lines)
 {
@@ -664,8 +733,12 @@ static QString mascotPick(const QStringList &lines)
 void MainWindow::createMascotWindow()
 {
     mascotWindow = new MascotWindow();
-    //The animated mascot is meant for supporters; until that's checked it's a setting (defaults write ... mascotAnimated)
-    mascotWindow->setAnimated(QSettings().value("mascotAnimated", false).toBool());
+    //The animated mascot is the patrons' thank-you: a code from their Patreon post, checked again at every start
+    //(mascotAnimated is a developer switch: defaults write ... mascotAnimated)
+    QSettings settings;
+    mascotWindow->setAnimated(settings.value("mascotAnimated", false).toBool() || settings.value("patronUnlocked", false).toBool());
+    if(!settings.value("patronCode").toString().isEmpty())     networkManager->get(QNetworkRequest(QUrl(PATRON_CODES_URL)));
+    connect(mascotWindow, &MascotWindow::unlockRequested, this, &MainWindow::unlockPatron);
     connect(mascotWindow, SIGNAL(quitRequested()),
             this, SLOT(closeApp()));
     connect(mascotWindow, &MascotWindow::discordRequested, this, []() {

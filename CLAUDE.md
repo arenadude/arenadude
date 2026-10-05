@@ -67,6 +67,7 @@ Debug toggles (compile-time) are the `DEBUG_*` defines in `Sources/utility.h`.
 The installed app downloads data directly from this repo's (`arenadude/arenadude`) `master` branch via `raw.githubusercontent.com` (URLs in `mainwindow.h`, `versionchecker.h`). Committing to these directories affects all live users immediately:
 
 - `Version/version.json` — `versionFree` lists the versions allowed to run (the last one is the latest; a version not listed must update or quit), `downloadUrl` the release page the update dialog opens (`vx.x` = latest), `log` the changes shown on the first run of the latest. The app never replaces itself.
+- `Version/patronCodes.json` — salted SHA-256 of the codes that unlock the animated mascot (the patrons' thank-you, posted on Patreon). Managed with `tools/patron_code.py add|remove|list`; the app checks a typed code and re-checks the saved one at every start, so removing a code turns its animation off. Fetched on every check, no companion version file.
 - `Arena/arenaVersion.json` — current arena card sets, `trustHA`, reset counters.
 - `HearthArena/hearthArena.json` + `haVersion.json`, `CardsJson/`, the template and mana/rarity files in `Extra/` (`MainWindow::downloadExtraFiles`) and `Images/icon.png`. The other `Images/` files are only bundled through `arenadude.qrc`.
 

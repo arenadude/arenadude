@@ -18,13 +18,15 @@
 #define HA_URL AT_REPO_RAW_URL "/HearthArena"
 #define ARENA_URL AT_REPO_RAW_URL "/Arena"
 #define CARDS_URL AT_REPO_RAW_URL "/CardsJson"
+#define PATRON_CODES_URL AT_REPO_RAW_URL "/Version/patronCodes.json"   //Hashes of the codes posted for the patrons
+#define PATRON_CODE_SALT "arenadude-patron:"                           //Same in tools/patron_code.py
 
 
-//TODO: the Patreon page and the Discord server, once they exist
+//TODO: the Discord server, once it exists
 #define MASCOT_SUPPORT_WINS 4   //The support ask comes after a win, on the Ready Up screen, from these wins on:
                                 //a normal arena run ends at 5 wins, so 5 came too late
 #define MASCOT_SOLID_RUN_WINS 5 //A run ending with these wins or more is praised
-#define MASCOT_SUPPORT_URL "https://www.patreon.com/"
+#define MASCOT_SUPPORT_URL "https://www.patreon.com/arenadude"
 #define SCREEN_RECORDING_SETTINGS_URL "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
 #define MULLIGAN_TOP_CARDS 10        //Cards shown at the mulligan
 #define MASCOT_DISCORD_URL "https://discord.gg/"
@@ -68,6 +70,7 @@ private:
     bool mascotSaysAdvice = false;              //The bubble shows the pick advice: only a new pick or a problem replaces it
     bool mascotLive = false;                    //Game events replayed from the logs at startup are ignored
     bool mascotLastWon = false;
+    QString patronPendingCode;                  //A code typed in the unlock dialog, checked when the code list arrives
     int mascotLastLosses = 0;
     QNetworkAccessManager *networkManager;
     QStringList allCardsDownloadList;
@@ -148,6 +151,8 @@ public slots:
     //MainWindow
     void pDebug(QString line, DebugLevel debugLevel=Normal, QString file="MainWindow");
     void pDebug(QString line, qint64 numLine, DebugLevel debugLevel, QString file);
+    static QString patronCodeHash(const QString &code);
+    void checkPatronCodes(const QByteArray &data);
 
 
 private slots:
@@ -173,6 +178,7 @@ private slots:
     void completeArenaDeck();
     void setLocalLang();
     void replyFinished(QNetworkReply *reply);
+    void unlockPatron();
     void missingOnWeb(QString code);
     void allCardsDownloaded();
     void init();

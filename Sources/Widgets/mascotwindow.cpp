@@ -638,6 +638,8 @@ void MascotWindow::contextMenuEvent(QContextMenuEvent *event)
     menu.addAction(patreonIcon, "Support on Patreon", this, &MascotWindow::supportRequested)->setIconVisibleInMenu(true);
     //An empty icon keeps the other items' text in line with the iconed ones
     static const QIcon noIcon = pixelIcon(QStringList(16, QString(16, '.')), Qt::transparent);
+    //The patrons' thank-you: offered until it's on
+    if(!animated)   menu.addAction(noIcon, "Unlock animated mascot...", this, &MascotWindow::unlockRequested)->setIconVisibleInMenu(true);
     menu.addAction(noIcon, "Report a problem", this, &MascotWindow::reportRequested)->setIconVisibleInMenu(true);
 
     //The native separator is barely visible on the dark menu: a line in the menu's text color, faded, for both themes
