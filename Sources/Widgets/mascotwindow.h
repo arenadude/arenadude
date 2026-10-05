@@ -80,8 +80,11 @@ private:
     QList<QPixmap> frames[NumMoods];
     QList<QPair<int, int>> frameSteps[NumMoods];
     bool animated = false;
+    int frameLoops[NumMoods] = {};     //Loops a mood plays before resting on its first step (0: it loops on)
     int frameStep = 0;
+    int loopsDone = 0;
     QTimer frameTimer;
+    bool framesPlaying() const;
     Mood mood = Idle;
     Mood moodBeforeDrag = Idle;
     QString text, buttonText;

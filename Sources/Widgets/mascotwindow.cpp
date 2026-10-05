@@ -67,6 +67,7 @@ MascotWindow::MascotWindow(QWidget *parent)
     frameSteps[Grin] = {{0, 1600}, {1, 120}, {2, 260}, {3, 160}, {1, 120}, {2, 260}, {3, 200}, {0, 1200}};
     //Happy: a rest, then the victory jump: a crouch, the burst, the hat flying off at the peak, the landing, settling
     frameSteps[Happy] = {{5, 1400}, {0, 260}, {1, 110}, {2, 380}, {3, 150}, {4, 280}};
+    frameLoops[Happy] = 3;      //The jump a few times, not for as long as the mood stays
     //Popcorn: a bite, then chewing
     frameSteps[Popcorn] = {{0, 1400}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 700}};
     //Blind: the cane taps right, sweeps, taps left
@@ -82,7 +83,8 @@ MascotWindow::MascotWindow(QWidget *parent)
     connect(&frameTimer, &QTimer::timeout, this, [this]() {
         if(frameSteps[mood].isEmpty())  return;
         frameStep = (frameStep + 1) % frameSteps[mood].count();
-        frameTimer.start(frameSteps[mood][frameStep].second);
+        if(frameStep == 0)  loopsDone++;
+        if(framesPlaying())     frameTimer.start(frameSteps[mood][frameStep].second);
         update();
     });
 
@@ -106,8 +108,9 @@ void MascotWindow::setMood(Mood mood)
     if(this->mood == mood)  return;
     this->mood = mood;
     frameStep = 0;
+    loopsDone = 0;
     frameTimer.stop();
-    if(animated && isVisible() && !frameSteps[mood].isEmpty())  frameTimer.start(frameSteps[mood][0].second);
+    if(isVisible() && framesPlaying())  frameTimer.start(frameSteps[mood][0].second);
     relayout();     //The sprite can be taller
     update();
 }
@@ -117,8 +120,9 @@ void MascotWindow::setAnimated(bool animated)
 {
     this->animated = animated;
     frameStep = 0;
+    loopsDone = 0;
     frameTimer.stop();
-    if(animated && isVisible() && !frameSteps[mood].isEmpty())  frameTimer.start(frameSteps[mood][0].second);
+    if(isVisible() && framesPlaying())  frameTimer.start(frameSteps[mood][0].second);
     relayout();
     update();
 }
@@ -154,6 +158,13 @@ void MascotWindow::saySections(const QString &text, const QList<Section> &sectio
     }
     relayout();
     update();
+}
+
+
+//The mood has frames to play, and loops left if it has a limit
+bool MascotWindow::framesPlaying() const
+{
+    return animated && !frameSteps[mood].isEmpty() && (frameLoops[mood] == 0 || loopsDone < frameLoops[mood]);
 }
 
 
@@ -313,7 +324,7 @@ void MascotWindow::paintEvent(QPaintEvent *)
 void MascotWindow::showEvent(QShowEvent *event)
 {
     QWidget::showEvent(event);
-    if(animated && !frameSteps[mood].isEmpty())     frameTimer.start(frameSteps[mood][frameStep].second);
+    if(framesPlaying())     frameTimer.start(frameSteps[mood][frameStep].second);
     if(pendingSayMsec > 0)
     {
         sayTimer.start(pendingSayMsec);
