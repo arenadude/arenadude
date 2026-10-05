@@ -10,6 +10,9 @@ int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
     app.setStyle(QStyleFactory::create("Fusion"));
+    //The mascot and the overlays are tool windows, which Qt doesn't count: closing any dialog (a patron code,
+    //"Remind me later") looked like the last window closing and quit the app. It quits only from closeApp.
+    app.setQuitOnLastWindowClosed(false);
     //Every QSettings uses these. A test run (log replay) gets its own settings with AT_SETTINGS_APP, as on macOS
     //they don't follow HOME: e.g. AT_SETTINGS_APP="Arena Dude Test" -> com.arena-dude.Arena Dude Test
     QCoreApplication::setOrganizationName("Arena Dude");

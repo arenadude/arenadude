@@ -87,6 +87,7 @@ void VersionChecker::checkUpdate(QByteArray versionJson)
 
         if(msgBox.clickedButton() == button1)   QDesktopServices::openUrl(downloadUrl);
         static_cast<QMainWindow*>(this->parent())->close();
+        qApp->quit();       //The app doesn't quit on its last window closing (main)
     }
     else if(remindedVersion != latestVersion)
     {

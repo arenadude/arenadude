@@ -20,6 +20,10 @@ namespace MacWindow
     //One level above the stay on top windows (floating level), e.g. the mascot above the tracker's windows
     void raiseAboveFloating(QWidget *window);
 
+    //A dialog of the tracker in front of everything: the app made active (the mascot never activates it, so the
+    //dialog opened behind other apps) and the dialog above the mascot's level
+    void bringToFront(QWidget *dialog);
+
     //Sets the cursor right away, even while another app (Hearthstone) is the active one
     void setCursorNow(Qt::CursorShape shape);
 

@@ -671,10 +671,15 @@ QString MainWindow::patronCodeHash(const QString &code)
 //The unlock dialog: the code is checked when the code list arrives (checkPatronCodes)
 void MainWindow::unlockPatron()
 {
-    bool ok = false;
-    const QString code = QInputDialog::getText(nullptr, "Arena Dude", "Your patron code (from the Patreon post for patrons):",
-                                               QLineEdit::Normal, "", &ok).trimmed();
-    if(!ok || code.isEmpty())   return;
+    QInputDialog dialog;
+    dialog.setWindowTitle("Arena Dude");
+    dialog.setLabelText("Your patron code (from the Patreon post for patrons):");
+    dialog.setWindowFlag(Qt::WindowStaysOnTopHint);
+    dialog.show();
+    MacWindow::bringToFront(&dialog);
+    if(dialog.exec() != QDialog::Accepted)  return;
+    const QString code = dialog.textValue().trimmed();
+    if(code.isEmpty())  return;
     patronPendingCode = code;
     networkManager->get(QNetworkRequest(QUrl(PATRON_CODES_URL)));
 }
