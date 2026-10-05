@@ -51,8 +51,8 @@ MascotWindow::MascotWindow(QWidget *parent)
     }
     //Idle: a blink, a while, a bored glance to the right, a while, another blink
     frameSteps[Idle] = {{0, 3000}, {1, 70}, {2, 110}, {1, 70}, {0, 2500}, {3, 1400}, {0, 1500}, {1, 70}, {2, 110}, {1, 70}};
-    //Smile: a wink, then a chuckle with both eyes closed
-    frameSteps[Smile] = {{0, 2200}, {1, 450}, {0, 1800}, {2, 700}};
+    //Smile: a wink and a thumbs up, both thumbs up, tipping the hat, a warm smile
+    frameSteps[Smile] = {{0, 1200}, {1, 250}, {2, 600}, {3, 500}, {4, 500}, {5, 800}};
     //Thinking: the finger taps the chin, a glance up, the eyes narrow
     frameSteps[Thinking] = {{0, 1500}, {3, 200}, {0, 200}, {3, 200}, {0, 200}, {3, 200}, {0, 1200}, {1, 1500}, {0, 1200}, {2, 800}};
     //Point: the raised finger wags twice (its frames are wider: the tilted finger goes past the still sprite's edge)
