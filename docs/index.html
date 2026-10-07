@@ -7,7 +7,7 @@
 <meta name="description" content="A pixel mascot that sits next to Hearthstone, rates every card in your Arena draft and tells you which one to take. Free for macOS.">
 <meta property="og:title" content="Arena Dude — Hearthstone Arena draft coach for Mac">
 <meta property="og:description" content="A pixel mascot that rates every card in your Arena draft and tells you which one to take.">
-<meta property="og:image" content="https://arenadude.github.io/arenadude/assets/icon.png">
+<meta property="og:image" content="https://arenadude.github.io/arenadude/assets/shots/draft.jpg">
 <link rel="icon" href="assets/icon.png">
 <style>
 @font-face { font-family: "Jersey 10"; src: url("assets/Jersey10.ttf") format("truetype"); font-display: swap; }
@@ -23,6 +23,10 @@
   --black: #0c0814;
   --paper: #ffffff;
   --paper-ink: #111111;
+  --discord: #5865f2;
+  --discord-hi: #6f7af5;
+  --patreon: #e0443f;
+  --patreon-hi: #ec5d58;
   --px: 4px;
 }
 
@@ -84,17 +88,44 @@ nav a:hover { color: var(--ink); }
 }
 .btn:hover { background: var(--purple-hi); }
 .btn:active { transform: translateY(2px); }
+.btn.discord { background: var(--discord); }
+.btn.discord:hover { background: var(--discord-hi); }
+.btn.patreon { background: var(--patreon); }
+.btn.patreon:hover { background: var(--patreon-hi); }
 .meta { color: var(--muted); font-size: 14px; margin-top: 12px; }
 
 section { padding: 60px 0; }
 section.alt { background: var(--bg-2); }
-section h2 { font-size: 46px; margin: 0 0 30px; text-align: center; }
+section h2 { font-size: 46px; margin: 0 0 12px; text-align: center; }
+section p.sub { text-align: center; color: var(--muted); margin: 0 auto 34px; max-width: 40em; }
 
-.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 26px; }
+/* In game: the screenshots in pixel frames, a caption under each */
+.shots { display: grid; grid-template-columns: repeat(2, 1fr); gap: 30px; }
+.shot-card { padding: 0; }
+.shot-card.wide { grid-column: 1 / -1; }
+/* Alone in its row (until the other shots come): centered */
+.shot-card.solo { grid-column: 1 / -1; justify-self: center; max-width: calc(50% - 15px); }
+.shot-card img { display: block; width: 100%; height: auto; }
+.shot-card figcaption { padding: 12px 16px 14px; font-size: 15px; color: #333; }
+.shot-card figcaption b { font-family: "Jersey 10", sans-serif; font-weight: 400; font-size: 24px; color: var(--paper-ink); display: block; line-height: 1.1; margin-bottom: 2px; }
+figure { margin: var(--px); }
+
+.features { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 26px; }
 .feature { padding: 18px; display: flex; flex-direction: column; align-items: center; text-align: center; }
 .feature img { width: 120px; height: auto; margin-bottom: 8px; }
 .feature h3 { font-size: 28px; margin: 4px 0 6px; line-height: 1; }
 .feature p { margin: 0; font-size: 15px; color: #333; }
+.badge { display: inline-block; font-family: "Jersey 10", sans-serif; font-size: 18px; line-height: 1; padding: 3px 7px 2px; background: var(--gold); color: var(--black); margin-bottom: 6px; }
+
+/* Patrons: the animated moods in a row */
+.dudes { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px 26px; margin-bottom: 30px; }
+.dudes figure { display: flex; flex-direction: column; align-items: center; }
+.dudes img { height: 160px; width: auto; }
+.dudes figcaption { font-family: "Jersey 10", sans-serif; font-size: 20px; color: var(--muted); }
+.center { text-align: center; }
+
+.community { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; margin-bottom: 34px; }
+.community .feature h3 { font-size: 26px; }
 
 .steps { counter-reset: step; max-width: 760px; margin: 0 auto; padding: 0; list-style: none; }
 .steps li { counter-increment: step; position: relative; padding: 0 0 38px 60px; }
@@ -129,7 +160,12 @@ footer p { margin: 6px 0; }
   .hero p.lead { margin-left: auto; margin-right: auto; }
   .mascot-box { order: -1; }
   .mascot-box img { width: 200px; }
-  nav a:not(.gh) { display: none; }
+  nav a:not(.keep) { display: none; }
+  nav a { margin-left: 14px; }
+  .shots, .community { grid-template-columns: 1fr; }
+  .dudes img { height: 130px; }
+  .shot-card.solo { max-width: none; }
+  nav a.gh { display: none; }
   .steps .pair img.shot { max-width: 100%; }
 }
 </style>
@@ -140,17 +176,20 @@ footer p { margin: 6px 0; }
   <header class="top">
     <a class="brand pixel" href="#"><img class="px" src="assets/icon.png" alt="">Arena Dude</a>
     <nav>
+      <a href="#in-game">In game</a>
       <a href="#features">Features</a>
       <a href="#install">Install</a>
       <a href="#faq">FAQ</a>
-      <a class="gh" href="https://github.com/arenadude/arenadude">GitHub</a>
+      <a class="keep" href="https://discord.gg/rX5ktJJzD8">Discord</a>
+      <a class="keep" href="https://www.patreon.com/arenadude">Patreon</a>
+      <a class="keep gh" href="https://github.com/arenadude/arenadude">GitHub</a>
     </nav>
   </header>
 
   <div class="hero">
     <div>
       <h1>Your <span>Arena</span> draft coach</h1>
-      <p class="lead">A pixel mascot sits next to Hearthstone, rates every card you're offered and tells you which one to take. Then it watches your run and has opinions about it.</p>
+      <p class="lead">A pixel mascot sits next to Hearthstone, rates every card you're offered and tells you which one to take. Then it scouts your opponents, watches your run and has opinions about it.</p>
       <a class="btn" href="https://github.com/arenadude/arenadude/releases/latest/download/Arena.Dude.Mac.zip">Download for Mac</a>
       <div class="meta">Free · macOS on Apple Silicon · Hearthstone in English · <a href="https://github.com/arenadude/arenadude/releases/latest">Release notes</a></div>
     </div>
@@ -161,35 +200,105 @@ footer p { margin: 6px 0; }
   </div>
 </div>
 
-<section id="features" class="alt">
+<section id="in-game" class="alt">
+  <div class="wrap">
+    <h2>The Dude in action</h2>
+    <p class="sub">No extra window to manage: the plates sit right under the cards, the Dude talks from his corner.</p>
+    <div class="shots">
+      <figure class="shot-card frame wide">
+        <img src="assets/shots/draft.jpg" alt="The draft screen: a plate under each card with its winrate and tier score, the mascot saying which one to take" width="1600" height="1000">
+        <figcaption><b>Every pick, rated</b>Under each card: thumbs up or down, its Firestone winrate and its HearthArena score. The Dude sums it up.</figcaption>
+      </figure>
+      <figure class="shot-card frame solo">
+        <img src="assets/shots/hero-choice.jpg" alt="The hero choice: each class with its winrate" width="1600" height="1000" loading="lazy">
+        <figcaption><b>The best class</b>Each hero's winrate this season, before you even pick.</figcaption>
+      </figure>
+      <!-- The mulligan (the opponent's top cards), the redraft (the cards to cut) and a win go here as more shot-cards -->
+    </div>
+  </div>
+</section>
+
+<section id="features">
   <div class="wrap">
     <h2>What the Dude does</h2>
+    <p class="sub">Everything below is free, for everyone.</p>
     <div class="features">
       <div class="feature frame">
-        <img class="px" src="assets/mascot-smug.png" alt="" width="389" height="440">
+        <img class="px" src="assets/mascot-thinking.png" alt="" width="389" height="440">
         <h3>Rates every card</h3>
-        <p>A plate under each card on the draft screen: its HearthArena tier score and its Firestone winrate.</p>
+        <p>A plate under each card on the draft screen: its HearthArena tier score and its Firestone winrate. Golden and signature cards too.</p>
       </div>
       <div class="feature frame">
-        <img class="px" src="assets/mascot-thinking.png" alt="" width="389" height="440">
+        <img class="px" src="assets/mascot-point.png" alt="" width="389" height="440">
         <h3>Picks for you</h3>
         <p>Both sources combined into one pick, said out loud by the mascot. With commentary.</p>
       </div>
       <div class="feature frame">
+        <span class="badge">New</span>
         <img class="px" src="assets/mascot-detective.png" alt="" width="389" height="440">
+        <h3>Scouts the opponent</h3>
+        <p>At the mulligan, the 10 cards your opponent's class loves most in Arena, so you know what to play around.</p>
+      </div>
+      <div class="feature frame">
+        <img class="px" src="assets/mascot-sweat.png" alt="" width="389" height="440">
         <h3>Fixes your redraft</h3>
         <p>After a loss, which cards to cut from the deck, from the worst up.</p>
       </div>
       <div class="feature frame">
         <img class="px" src="assets/mascot-popcorn.png" alt="" width="389" height="440">
         <h3>Watches your run</h3>
-        <p>Class winrates on the hero choice, your record per run, and a reaction to every win and loss.</p>
+        <p>Your record per run, a verdict on the finished deck, and a reaction to every win and loss.</p>
       </div>
     </div>
   </div>
 </section>
 
-<section id="install">
+<section id="patrons" class="alt">
+  <div class="wrap">
+    <h2>Meet the animated Dude</h2>
+    <p class="sub">Arena Dude is free and stays free. If it wins you games, you can keep it going on Patreon for $3 a month. As a thank-you, patrons unlock the animated Dude.</p>
+    <div class="dudes">
+      <figure><img class="px" src="assets/anim/happy.gif" alt="The Dude jumping after a win" width="411" height="440" loading="lazy"><figcaption>after a win</figcaption></figure>
+      <figure><img class="px" src="assets/anim/smile.gif" alt="The Dude giving a thumbs up" width="388" height="440" loading="lazy"><figcaption>new run</figcaption></figure>
+      <figure><img class="px" src="assets/anim/popcorn.gif" alt="The Dude eating popcorn" width="389" height="440" loading="lazy"><figcaption>your games</figcaption></figure>
+      <figure><img class="px" src="assets/anim/detective.gif" alt="The Dude looking through a magnifying glass" width="389" height="440" loading="lazy"><figcaption>the mulligan</figcaption></figure>
+      <figure><img class="px" src="assets/anim/thinking.gif" alt="The Dude tapping his chin" width="389" height="440" loading="lazy"><figcaption>thinking</figcaption></figure>
+    </div>
+    <div class="center">
+      <a class="btn patreon" href="https://www.patreon.com/arenadude">Support on Patreon</a>
+      <div class="meta">Your support pays for data updates every patch, new features and an Apple developer account (no more "Open Anyway").</div>
+    </div>
+  </div>
+</section>
+
+<section id="community">
+  <div class="wrap">
+    <h2>Join the Discord</h2>
+    <p class="sub">Talk Arena, show off your runs and tell the Dude what he got wrong.</p>
+    <div class="community">
+      <div class="feature frame">
+        <img class="px" src="assets/mascot-stars.png" alt="" width="389" height="440">
+        <h3>Share your runs</h3>
+        <p>12 wins or a heroic 0-3, post your drafts in #arena-runs.</p>
+      </div>
+      <div class="feature frame">
+        <img class="px" src="assets/mascot-sweat.png" alt="" width="389" height="440">
+        <h3>Report a bug</h3>
+        <p>Right-click the Dude, <i>Report a problem</i>: it opens #bug-reports and shows your log, ready to attach.</p>
+      </div>
+      <div class="feature frame">
+        <img class="px" src="assets/mascot-thinking.png" alt="" width="389" height="440">
+        <h3>Suggest a feature</h3>
+        <p>Ideas go in #suggestions. Secrets reading is next, the Dude keeps asking for it.</p>
+      </div>
+    </div>
+    <div class="center">
+      <a class="btn discord" href="https://discord.gg/rX5ktJJzD8">Join the Discord</a>
+    </div>
+  </div>
+</section>
+
+<section id="install" class="alt">
   <div class="wrap">
     <h2>Install in 2 minutes</h2>
     <ol class="steps">
@@ -229,13 +338,17 @@ footer p { margin: 6px 0; }
   </div>
 </section>
 
-<section id="faq" class="alt">
+<section id="faq">
   <div class="wrap">
     <h2>FAQ</h2>
     <div class="faq">
       <details>
         <summary>Is it free?</summary>
-        <p>Yes. Arena Dude is free and open source.</p>
+        <p>Yes. Arena Dude is free and open source, and every feature that helps you win is for everyone. Patrons on <a href="https://www.patreon.com/arenadude">Patreon</a> get the animated Dude as a thank-you.</p>
+      </details>
+      <details>
+        <summary>I'm a patron. How do I unlock the animated Dude?</summary>
+        <p>Your code is in the patrons-only post on <a href="https://www.patreon.com/arenadude">Patreon</a>. Right-click the Dude, choose <i>Unlock animated mascot…</i> and paste it.</p>
       </details>
       <details>
         <summary>How does it know what's on screen?</summary>
@@ -251,17 +364,17 @@ footer p { margin: 6px 0; }
       </details>
       <details>
         <summary>Where do the ratings come from?</summary>
-        <p>Tier scores from <a href="https://www.heartharena.com">HearthArena</a>, winrates from <a href="https://www.firestoneapp.com">Firestone</a>, card data from <a href="https://hearthstonejson.com">HearthstoneJSON</a>. They're refreshed twice a month.</p>
+        <p>Tier scores from <a href="https://www.heartharena.com">HearthArena</a>, winrates and the opponents' top cards from <a href="https://www.firestoneapp.com">Firestone</a>, card data from <a href="https://hearthstonejson.com">HearthstoneJSON</a>. They're refreshed twice a month.</p>
       </details>
       <details>
         <summary>Found a bug?</summary>
-        <p>Open an issue on <a href="https://github.com/arenadude/arenadude/issues">GitHub</a>.</p>
+        <p>Right-click the Dude and choose <i>Report a problem</i>: it opens #bug-reports on our <a href="https://discord.gg/vZ8aHHG5mE">Discord</a> and shows your log file, ready to attach. You can also open an issue on <a href="https://github.com/arenadude/arenadude/issues">GitHub</a>.</p>
       </details>
     </div>
   </div>
 </section>
 
-<section class="cta">
+<section class="cta alt">
   <div class="wrap">
     <img class="px" src="assets/mascot-stars.png" alt="" width="389" height="440">
     <h2>Ready for 12 wins?</h2>
@@ -271,6 +384,7 @@ footer p { margin: 6px 0; }
 
 <footer>
   <div class="wrap">
+    <p><a href="https://discord.gg/rX5ktJJzD8">Discord</a> · <a href="https://www.patreon.com/arenadude">Patreon</a> · <a href="https://github.com/arenadude/arenadude">GitHub</a></p>
     <p>Arena Dude is based on <a href="https://github.com/supertriodo/Arena-Tracker">Arena Tracker</a> by Triodo and released under the <a href="https://github.com/arenadude/arenadude/blob/master/LICENSE">GNU GPL v2</a>. Font: Jersey 10 (SIL OFL).</p>
     <p>Arena Dude is not affiliated with or endorsed by Blizzard Entertainment. Hearthstone is a trademark of Blizzard Entertainment, Inc.</p>
   </div>
