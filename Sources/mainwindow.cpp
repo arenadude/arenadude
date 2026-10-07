@@ -752,11 +752,11 @@ void MainWindow::createMascotWindow()
     connect(mascotWindow, &MascotWindow::supportRequested, this, []() {
         QDesktopServices::openUrl(QUrl(MASCOT_SUPPORT_URL));
     });
-    //The log goes with the report: shown in Finder, ready to drop into the Discord
+    //The log goes with the report: shown in Finder, ready to drop into a post of the Discord's bug forum
     connect(mascotWindow, &MascotWindow::reportRequested, this, []() {
         const QString logPath = Utility::dataPath() + "/ArenaDudeLog.txt";
         QProcess::startDetached("open", {"-R", logPath});
-        QDesktopServices::openUrl(QUrl(MASCOT_DISCORD_URL));
+        QDesktopServices::openUrl(QUrl(MASCOT_BUGS_URL));
     });
     connect(mascotWindow, SIGNAL(cardEntered(QString,QRect,int,int)),
             cardWindow, SLOT(loadCard(QString,QRect,int,int)));

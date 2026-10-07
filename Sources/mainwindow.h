@@ -29,6 +29,7 @@
 #define SCREEN_RECORDING_SETTINGS_URL "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
 #define MULLIGAN_TOP_CARDS 10        //Cards shown at the mulligan
 #define MASCOT_DISCORD_URL "https://discord.gg/rX5ktJJzD8"
+#define MASCOT_BUGS_URL "https://discord.gg/vZ8aHHG5mE"     //An invite that opens the #bug-reports forum
 
 class MainWindow : public QMainWindow
 {
