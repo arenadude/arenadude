@@ -91,7 +91,11 @@ MascotWindow::MascotWindow(QWidget *parent)
     bubbleFont = pixelFont(MASCOT_FONT_SIZE);
 
     sayTimer.setSingleShot(true);
-    connect(&sayTimer, &QTimer::timeout, this, [this]() { say(""); });
+    connect(&sayTimer, &QTimer::timeout, this, [this]() {
+        say("");
+        //Smile is a greeting: when its line is over the mascot goes back to idle, not smiling (and winking) on and on
+        if(mood == Smile)   setMood(Idle);
+    });
 
     loadAnchor();
     relayout();
