@@ -68,6 +68,12 @@ MascotWindow::MascotWindow(QWidget *parent)
     //Happy: a rest, then the victory jump: a crouch, the burst, the hat flying off at the peak, the landing, settling
     frameSteps[Happy] = {{5, 1400}, {0, 260}, {1, 110}, {2, 380}, {3, 150}, {4, 280}};
     frameLoops[Happy] = 3;      //The jump a few times, not for as long as the mood stays
+    //The lively ones play a little and rest on their first frame: the advice's finger wags twice (one loop),
+    //not all the time the pick is shown
+    frameLoops[Point] = 1;
+    frameLoops[Stars] = 2;
+    frameLoops[Grin] = 2;
+    frameLoops[Smile] = 2;
     //Popcorn: a bite, then chewing
     frameSteps[Popcorn] = {{0, 1400}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 170}, {2, 170}, {1, 700}};
     //Blind: the cane taps right, sweeps, taps left
