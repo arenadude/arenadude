@@ -93,8 +93,7 @@ MascotWindow::MascotWindow(QWidget *parent)
     sayTimer.setSingleShot(true);
     connect(&sayTimer, &QTimer::timeout, this, [this]() {
         say("");
-        //Smile is a greeting: when its line is over the mascot goes back to idle, not smiling (and winking) on and on
-        if(mood == Smile)   setMood(Idle);
+        emit lineOver();
     });
 
     loadAnchor();

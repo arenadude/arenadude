@@ -744,6 +744,7 @@ void MainWindow::createMascotWindow()
     mascotWindow->setAnimated(settings.value("mascotAnimated", false).toBool() || settings.value("patronUnlocked", false).toBool());
     if(!settings.value("patronCode").toString().isEmpty())     networkManager->get(QNetworkRequest(QUrl(PATRON_CODES_URL)));
     connect(mascotWindow, &MascotWindow::unlockRequested, this, &MainWindow::unlockPatron);
+    connect(mascotWindow, &MascotWindow::lineOver, this, &MainWindow::mascotLineOver);
     connect(mascotWindow, SIGNAL(quitRequested()),
             this, SLOT(closeApp()));
     connect(mascotWindow, &MascotWindow::discordRequested, this, []() {
@@ -1419,6 +1420,18 @@ void MainWindow::mascotMulligan(QString enemyHeroCode)
     mascotSaysMulligan = true;
     mascotWindow->setMood(MascotWindow::Detective);
     mascotWindow->saySections(MascotWindow::colored(className + "s", mascotClassColor(classOrder)) + " love these. In how many decks:", sections);
+}
+
+
+//A reaction lasts as long as its line: then the mascot calms down (watching the game, or idle), not
+//jumping, winking or sweating until the next event. Moods that show a state (popcorn, the mulligan's
+//detective, blind, thinking) stay.
+void MainWindow::mascotLineOver()
+{
+    static const QList<MascotWindow::Mood> reactions = {MascotWindow::Smile, MascotWindow::Grin, MascotWindow::Stars,
+                                                        MascotWindow::Sweat, MascotWindow::Happy, MascotWindow::Point};
+    if(!reactions.contains(mascotWindow->currentMood()))    return;
+    mascotWindow->setMood(mascotInGame ? MascotWindow::Popcorn : MascotWindow::Idle);
 }
 
 

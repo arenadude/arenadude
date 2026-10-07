@@ -61,6 +61,7 @@ signals:
     void reportRequested();     //Report a problem: the log and the Discord
     void unlockRequested();     //Unlock the animated mascot with a patron code
     void said(const QString &text);     //For the log
+    void lineOver();                    //A line with a time ran out and the bubble hid
     void cardEntered(QString code, QRect rectCard, int maxTop, int maxBottom);
     void cardLeave();
 

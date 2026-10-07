@@ -165,6 +165,7 @@ private slots:
     void mascotEnemySecret();
     void mascotMulligan(QString enemyHeroCode);
     void mascotMulliganDone();
+    void mascotLineOver();
     void mascotRewards(int wins);
     void mascotReadyUpWins(int wins);
     void mascotDraftFinished(int knownCards, float avgFire, float avgHA);
