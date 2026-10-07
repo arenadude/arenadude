@@ -291,34 +291,6 @@ h2 .g { color: var(--gold); }
 .panel-copy h3 { font-size: 34px; line-height: 1; margin: 0 0 6px; display: flex; align-items: center; gap: 10px; }
 .panel-copy p { margin: 0; font-size: 15px; color: var(--paper-muted); }
 .panel-copy q { align-self: center; display: block; font-family: var(--pixel); font-size: 24px; line-height: 1.1; color: var(--purple); quotes: "“" "”"; padding-left: 16px; border-left: 4px solid var(--purple); }
-
-/* Placeholder slot until the real screenshot exists: same 16:10 frame, swap for an <img class="media"> */
-.panel .media.placeholder {
-  position: relative; display: flex; align-items: center; justify-content: center; gap: 4px; overflow: hidden;
-  background:
-    linear-gradient(45deg, rgba(255,255,255,.04) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.04) 75%) 0 0 / 32px 32px,
-    linear-gradient(45deg, rgba(255,255,255,.04) 25%, transparent 25%, transparent 75%, rgba(255,255,255,.04) 75%) 16px 16px / 32px 32px,
-    radial-gradient(ellipse at 50% 45%, #3a2a66, #150e28 75%);
-  padding: 6% 8%;
-}
-.placeholder img { width: 30%; max-width: 190px; height: auto; flex: none; }
-.placeholder .bubble { font-size: clamp(18px, 2.2vw, 28px); max-width: 52%; }
-/* The Dude's list bubble, as the app draws it: a title, optional source headers, name left, value right */
-.say { max-width: 62% !important; padding: 12px 16px 12px; }
-.say-title { display: block; font-size: 21px; line-height: 1.05; margin-bottom: 6px; }
-.say-head { display: block; font-size: 17px; line-height: 1; color: var(--paper-muted); margin: 6px 0 2px; text-decoration: underline; text-underline-offset: 3px; }
-.say-rows { list-style: none; margin: 0; padding: 0; font-size: 17px; line-height: 1.12; }
-.say-rows li { display: flex; justify-content: space-between; gap: 18px; padding: 0 4px; }
-.say-rows li.hover { background: #ece6f6; box-shadow: inset 3px 0 0 var(--purple); }
-.say-rows .v { color: var(--paper-muted); }
-.say-rows li.more { display: none; color: var(--paper-muted); }
-.placeholder .ex { position: absolute; left: 12px; top: 12px; padding: 4px 8px 3px; background: var(--gold); color: var(--black); font-family: var(--pixel); font-size: 17px; line-height: 1; box-shadow: var(--border-3); }
-.hintph { gap: 0 !important; }
-.hintph .preview { width: 24%; max-width: 170px; height: auto; box-shadow: var(--border); flex: none; margin-right: 6px; }
-.hintph .dude-sm { width: 16%; max-width: 110px; align-self: flex-end; }
-.hintph .say { max-width: 46% !important; margin-left: 18px; }
-.hintph .dude-sm { margin-left: -4px; }
-
 /* "Watches your run": the Dude's real reactions, built in HTML */
 .reel { display: flex !important; flex-direction: column; justify-content: center; gap: 4%; padding: 4% 7%; background: radial-gradient(ellipse at 50% 50%, #3a2a66, #150e28 80%) !important; }
 .reel .row { display: flex; align-items: center; }
@@ -478,18 +450,6 @@ footer .flinks a { margin: 0 10px; text-decoration: none; white-space: nowrap; }
   .quiz-dude .bubble { font-size: 20px; }
   .panel-copy { padding: 14px 16px 16px; }
   .panel-copy h3 { font-size: 30px; }
-  .placeholder .bubble { font-size: 17px; max-width: 60%; }
-  .panel .media.placeholder { aspect-ratio: auto; min-height: 220px; padding: 40px 10px 14px; }
-  .placeholder img { width: 26%; }
-  .say { max-width: 72% !important; padding: 8px 10px; }
-  .say-title { font-size: 17px; }
-  .say-head { font-size: 14px; }
-  .say-rows { font-size: 14px; }
-  .say-rows li:nth-child(n+6):not(.more) { display: none; }
-  .say-rows li.more { display: flex; }
-  .hintph .preview { width: 26%; }
-  .hintph .dude-sm { display: none; }
-  .hintph .say { max-width: 66% !important; }
   .reel .row:nth-child(3) { display: none; }
   .reel .bubble { font-size: 16px; }
   .reel img { width: 22%; }
@@ -654,8 +614,8 @@ footer .flinks a { margin: 0 10px; text-decoration: none; white-space: nowrap; }
         <button class="tab" role="tab" id="t-pick" aria-controls="p-pick" aria-selected="false" tabindex="-1"><span class="gem">2</span><span><span class="t">Picks for you</span><span class="s">Said out loud, with commentary</span></span></button>
         <button class="tab" role="tab" id="t-class" aria-controls="p-class" aria-selected="false" tabindex="-1"><span class="gem">3</span><span><span class="t">Finds the best class</span><span class="s">Winrates at the hero choice</span></span></button>
         <button class="tab" role="tab" id="t-scout" aria-controls="p-scout" aria-selected="false" tabindex="-1"><span class="gem">4</span><span><span class="t">Scouts the opponent</span><span class="s">Their 10 top cards</span></span><span class="tag">New</span></button>
-        <button class="tab" role="tab" id="t-redraft" aria-controls="p-redraft" aria-selected="false" tabindex="-1"><span class="gem">5</span><span><span class="t">Fixes your redraft</span><span class="s">Cards to cut, worst first</span></span></button>
-        <button class="tab" role="tab" id="t-hint" aria-controls="p-hint" aria-selected="false" tabindex="-1"><span class="gem">6</span><span><span class="t">Removal hints</span><span class="s">Swap the right cards</span></span></button>
+        <button class="tab" role="tab" id="t-redraft" aria-controls="p-redraft" aria-selected="false" tabindex="-1"><span class="gem">5</span><span><span class="t">Fixes your redraft</span><span class="s">Rates the new cards</span></span></button>
+        <button class="tab" role="tab" id="t-hint" aria-controls="p-hint" aria-selected="false" tabindex="-1"><span class="gem">6</span><span><span class="t">Removal hints</span><span class="s">Cards to cut, worst first</span></span></button>
         <button class="tab" role="tab" id="t-run" aria-controls="p-run" aria-selected="false" tabindex="-1"><span class="gem">7</span><span><span class="t">Watches your run</span><span class="s">Record, verdict, reactions</span></span></button>
       </div>
 
@@ -681,28 +641,13 @@ footer .flinks a { margin: 0 10px; text-decoration: none; white-space: nowrap; }
         </div>
 
         <div class="panel frame" role="tabpanel" id="p-redraft" aria-labelledby="t-redraft">
-          <!-- TODO screenshot: assets/shots/redraft.jpg (1600x1000, the redraft discard screen with the Dude's cut list, worst first).
-               Replace the <div class="media placeholder">…</div> below with:
-               <img class="media" src="assets/shots/redraft.jpg" alt="The redraft: the mascot lists the cards to cut from the deck, worst first" width="1600" height="1000" loading="lazy"> -->
-          <div class="media placeholder" role="img" aria-label="Example of the Dude's redraft list: the cards to cut, worst first, one section by Firestone and one by HearthArena">
-            <img class="px" src="assets/mascot-point.png" alt="" width="389" height="440">
-            <div class="bubble t-left say" aria-hidden="true"><span class="say-title">Cut these, and don't get sentimental:</span><span class="say-head">Firestone</span><ol class="say-rows"><li><span style="color:#787878">Wisp x2</span><span class="v">··%</span></li><li><span style="color:#787878">Magma Rager</span><span class="v">··%</span></li><li><span style="color:#787878">Boulderfist Ogre</span><span class="v">··%</span></li></ol><span class="say-head">HearthArena</span><ol class="say-rows"><li><span style="color:#787878">Magma Rager</span><span class="v">··</span></li><li><span style="color:#787878">Wisp</span><span class="v">··</span></li><li><span style="color:#787878">Ironbeak Owl</span><span class="v">··</span></li></ol></div>
-            <span class="ex" aria-hidden="true">Example</span>
-          </div>
-          <div class="panel-copy"><div><h3>Fixes your redraft</h3><p>After a loss, which cards to cut from the deck, worst first, by Firestone and by HearthArena.</p></div><q>Cut these, and don't get sentimental.</q></div>
+          <img class="media" src="assets/shots/redraft.jpg" alt="The redraft: a plate under each of the new cards, and the mascot picking Reluctant Wrangler at 61.2% winrate" width="1600" height="1000" loading="lazy">
+          <div class="panel-copy"><div><h3>Fixes your redraft</h3><p>After a loss you draft new cards: each one gets its plate, and the Dude picks the best.</p></div><q>Reluctant Wrangler. 61.2% winrate. I'd bet my hat on it.</q></div>
         </div>
 
         <div class="panel frame" role="tabpanel" id="p-hint" aria-labelledby="t-hint">
-          <!-- TODO screenshot: assets/shots/removal-hint.jpg (1600x1000, the card removal hint during a redraft).
-               Replace the <div class="media placeholder">…</div> below with:
-               <img class="media" src="assets/shots/removal-hint.jpg" alt="The card removal hint during a redraft" width="1600" height="1000" loading="lazy"> -->
-          <div class="media placeholder hintph" role="img" aria-label="Example: hovering a card in the Dude's cut list shows the card next to it">
-            <img class="preview" src="assets/shots/card-cumulus.jpg" alt="" width="232" height="312">
-            <div class="bubble t-right say" aria-hidden="true"><span class="say-title">These go. Trust me:</span><span class="say-head">HearthArena</span><ol class="say-rows"><li><span style="color:#787878">Wisp</span><span class="v">··</span></li><li class="hover"><span style="color:#787878">Curious Cumulus</span><span class="v">··</span></li><li><span style="color:#787878">Ironbeak Owl</span><span class="v">··</span></li><li><span style="color:#787878">Magma Rager</span><span class="v">··</span></li></ol></div>
-            <img class="px dude-sm" src="assets/mascot-thinking.png" alt="" width="389" height="440">
-            <span class="ex" aria-hidden="true">Example</span>
-          </div>
-          <div class="panel-copy"><div><h3>Removal hints</h3><p>Not sure about a cut? Hover a card in the Dude's list and he shows it to you, so you swap out the right one.</p></div><q>These go. Trust me.</q></div>
+          <img class="media" src="assets/shots/removal-hint.jpg" alt="Discarding cards after the redraft: the mascot lists the weakest cards by Firestone and by HearthArena, and shows the hovered one, Sawbones" width="1600" height="1000" loading="lazy">
+          <div class="panel-copy"><div><h3>Removal hints</h3><p>Then Hearthstone makes you discard. The Dude lists the weakest cards, worst first, by Firestone and by HearthArena. Hover one to see it.</p></div><q>These go. Trust me.</q></div>
         </div>
 
         <div class="panel frame" role="tabpanel" id="p-run" aria-labelledby="t-run">
