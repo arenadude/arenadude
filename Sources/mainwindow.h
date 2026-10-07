@@ -22,14 +22,13 @@
 #define PATRON_CODE_SALT "arenadude-patron:"                           //Same in tools/patron_code.py
 
 
-//TODO: the Discord server, once it exists
 #define MASCOT_SUPPORT_WINS 4   //The support ask comes after a win, on the Ready Up screen, from these wins on:
                                 //a normal arena run ends at 5 wins, so 5 came too late
 #define MASCOT_SOLID_RUN_WINS 5 //A run ending with these wins or more is praised
 #define MASCOT_SUPPORT_URL "https://www.patreon.com/arenadude"
 #define SCREEN_RECORDING_SETTINGS_URL "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
 #define MULLIGAN_TOP_CARDS 10        //Cards shown at the mulligan
-#define MASCOT_DISCORD_URL "https://discord.gg/"
+#define MASCOT_DISCORD_URL "https://discord.gg/rX5ktJJzD8"
 
 class MainWindow : public QMainWindow
 {
