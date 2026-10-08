@@ -4,7 +4,7 @@
 #include "utility.h"
 #include <QNetworkAccessManager>
 
-#define VERSION QString("v1.1.0")
+#define VERSION QString("v1.1.1")
 #define VERSION_URL AT_REPO_RAW_URL "/Version/version.json"
 
 
