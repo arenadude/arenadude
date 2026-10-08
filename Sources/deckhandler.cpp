@@ -110,6 +110,23 @@ void DeckHandler::insertDeckCard(DeckCard &deckCard)
 }
 
 
+//cards.json came after the deck: a first run reads Hearthstone's deck while the card list is still downloading, and
+//its cards had no name, cost, type or rarity. Read them again and put the deck back in mana order.
+void DeckHandler::refreshCardData()
+{
+    if(deckCardList.count() <= 1)   return;
+    for(int i=1; i<deckCardList.count(); i++)   deckCardList[i].setCode(deckCardList[i].getCode());
+    std::stable_sort(deckCardList.begin() + 1, deckCardList.end(), [](const DeckCard &a, const DeckCard &b) {
+        return a.getCost() < b.getCost() ||
+               (a.getCost() == b.getCost() && a.getName().toLower() < b.getName().toLower());
+    });
+
+    QStringList names;
+    for(int i=1; i<deckCardList.count(); i++)   names << deckCardList[i].getName();
+    emit pDebug("Card data refreshed: " + names.join(", "));
+}
+
+
 void DeckHandler::cardTotalMin(int index)
 {
     deckCardList[index].total--;

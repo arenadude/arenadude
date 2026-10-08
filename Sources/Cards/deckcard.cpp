@@ -77,7 +77,7 @@ CardType DeckCard::getType()
 }
 
 
-QString DeckCard::getName()
+QString DeckCard::getName() const
 {
     return name;
 }

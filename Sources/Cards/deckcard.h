@@ -36,7 +36,7 @@ public:
     bool isCode(const QString &code);
     QString getCode() const;
     CardType getType();
-    QString getName();
+    QString getName() const;
     CardRarity getRarity();
     int getCost() const;
     void setCode(QString code);

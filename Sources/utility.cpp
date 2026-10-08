@@ -153,9 +153,10 @@ QString Utility::cardEnNameFromCode(const QString &code)
 }
 
 
+//cards.json only has the English names (the other languages made it 75 MB): any other language falls back to them
 QString Utility::cardLocalNameFromCode(const QString &code)
 {
-    return (*cardsJson)[code].value("name").toObject().value(localLang).toString();
+    return getCardAttribute(code, "name").toString();
 }
 
 
@@ -181,7 +182,8 @@ QJsonValue Utility::getCardAttribute(const QString &code, const QString &attribu
 {
     if(attribute == "text" || attribute == "name")
     {
-        return (*cardsJson)[code].value(attribute).toObject().value(localLang);
+        const QJsonObject texts = (*cardsJson)[code].value(attribute).toObject();
+        return texts.contains(localLang) ? texts.value(localLang) : texts.value("enUS");
     }
     else
     {

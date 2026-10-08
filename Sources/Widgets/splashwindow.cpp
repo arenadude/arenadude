@@ -59,6 +59,16 @@ void SplashWindow::setProgress(int done, int total)
 }
 
 
+//cards.json comes first: the images can't start before the tracker knows the cards
+void SplashWindow::setListProgress(qint64 received, qint64 total)
+{
+    listReceived = received;
+    listTotal = total;
+    stallTimer.start(SPLASH_STALL_TIME);
+    update();
+}
+
+
 void SplashWindow::ready()
 {
     if(readySeen)   return;
@@ -90,20 +100,34 @@ void SplashWindow::paintEvent(QPaintEvent *)
     painter.setPen(Qt::black);
     painter.drawText(bubble, Qt::AlignCenter, text);
 
-    //Download progress under the box: a white pixel box filled in purple
-    if(total <= 0)  return;
+    if(total > 0)
+    {
+        drawBar(painter, std::min(done, total)/static_cast<double>(total),
+                QStringLiteral("%1 %2/%3").arg(splashLines[lineIndex]).arg(done).arg(total));
+    }
+    else if(listTotal > 0)
+    {
+        const double mb = 1024.0*1024.0;
+        drawBar(painter, std::min(listReceived, listTotal)/static_cast<double>(listTotal),
+                QStringLiteral("Grabbing the card list %1/%2 MB").arg(listReceived/mb, 0, 'f', 1).arg(listTotal/mb, 0, 'f', 1));
+    }
+}
+
+
+//Download progress under the box: a white pixel box filled in purple
+void SplashWindow::drawBar(QPainter &painter, double fraction, const QString &label)
+{
     const QRect bar(0, artSize.height() + SPLASH_BAR_GAP, artSize.width(), SPLASH_BAR_HEIGHT);
     MascotWindow::drawPixelFrame(painter, bar, Qt::white);
     const int inset = 3;
     const QRect inside = bar.adjusted(inset, inset, -inset, -inset);
     QRect fill = inside;
-    fill.setWidth(inside.width() * std::min(done, total) / total);
+    fill.setWidth(qRound(inside.width() * fraction));
     painter.setPen(Qt::NoPen);
     painter.setBrush(SPLASH_PURPLE);
     painter.drawRect(fill);
 
     //The label in white over the purple part, black over the white one
-    const QString label = QStringLiteral("%1 %2/%3").arg(splashLines[lineIndex]).arg(done).arg(total);
     painter.setPen(Qt::black);
     painter.drawText(inside, Qt::AlignCenter, label);
     painter.save();

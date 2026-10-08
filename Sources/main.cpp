@@ -28,6 +28,7 @@ int main(int argc, char *argv[])
     window.setSplashOpen();
     QObject::connect(splash, &QObject::destroyed, &window, &MainWindow::splashClosed);
     QObject::connect(&window, &MainWindow::startupProgress, splash, &SplashWindow::setProgress);
+    QObject::connect(&window, &MainWindow::startupListProgress, splash, &SplashWindow::setListProgress);
     QObject::connect(&window, &MainWindow::startupReady, splash, &SplashWindow::ready);
 
     return app.exec();

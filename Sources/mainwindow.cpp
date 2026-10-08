@@ -211,7 +211,9 @@ void MainWindow::createCardsJsonMap(QByteArray &jsonData)
 
     cardsJsonLoaded = true;
     if(draftHandler != nullptr) draftHandler->buildHeroCodesList();
+    if(deckHandler != nullptr)  deckHandler->refreshCardData();
     checkArenaCards();
+    mascotMulliganRetry();
 }
 
 
@@ -356,6 +358,8 @@ void MainWindow::initHeroesWinrate()
 void MainWindow::readyFireWRMap(QMap<QString, float> *fireWRMap)
 {
     draftHandler->setFireWRMap(fireWRMap);
+    fireCardsReady = true;
+    mascotMulliganRetry();
 }
 
 
@@ -1389,6 +1393,19 @@ void MainWindow::mascotStartGame()
 void MainWindow::mascotMulligan(QString enemyHeroCode)
 {
     if(!mascotLive || !mascotInGame || getLoadingScreen() != arena)     return;
+    //A first run can reach its first game before the card list and the Firestone stats are downloaded
+    if(!cardsJsonLoaded || !fireCardsReady)
+    {
+        pDebug("Mulligan: card data not ready yet, waiting.");
+        mascotMulliganPending = enemyHeroCode;
+        mascotSaysAdvice = false;
+        mascotSaysStatus = false;
+        mascotSaysMulligan = true;
+        mascotWindow->setMood(MascotWindow::Detective);
+        mascotWindow->say("Still unpacking my notes on this opponent. One sec...");
+        return;
+    }
+    mascotMulliganPending.clear();
     const QList<CardClass> classes = Utility::getClassFromCode(enemyHeroCode);
     if(classes.isEmpty() || classes.first() >= NUM_HEROS)
     {
@@ -1435,8 +1452,17 @@ void MainWindow::mascotLineOver()
 }
 
 
+//The card data a waiting mulligan needed is in: the list, if the mulligan is still on
+void MainWindow::mascotMulliganRetry()
+{
+    if(mascotMulliganPending.isEmpty() || !cardsJsonLoaded || !fireCardsReady)   return;
+    mascotMulligan(mascotMulliganPending);
+}
+
+
 void MainWindow::mascotMulliganDone()
 {
+    mascotMulliganPending.clear();
     if(!mascotSaysMulligan)     return;
     mascotSaysMulligan = false;
     mascotWindow->setMood(MascotWindow::Popcorn);
@@ -1480,6 +1506,7 @@ void MainWindow::mascotEndGame(bool playerWon, bool playerUnknown)
     if(!mascotLive)     return;
     mascotSaysStatus = false;
     mascotSaysMulligan = false;
+    mascotMulliganPending.clear();
     mascotInGame = false;
     if(playerUnknown)
     {
@@ -1710,7 +1737,8 @@ void MainWindow::downloadCardsJson(int version)
     if(needDownload)
     {
         settings.setValue("cardsVersion", version);
-        networkManager->get(QNetworkRequest(QUrl(CARDS_URL + QString("/cards.json"))));
+        QNetworkReply *reply = networkManager->get(QNetworkRequest(QUrl(CARDS_URL + QString("/cards.json"))));
+        connect(reply, &QNetworkReply::downloadProgress, this, &MainWindow::startupListProgress);
         pDebug("Extra: Json Cards --> Download from: " + QString(CARDS_URL) + QString("/cards.json"));
     }
     else

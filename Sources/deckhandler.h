@@ -41,6 +41,7 @@ public:
     void completeArenaDeck(QString hero);
     void redraftReviewDeck(QString bestCodesRedraftingReview[5]);
     void syncDeckSnapshot(QStringList codes);
+    void refreshCardData();
 
 signals:
     void checkCardImage(QString code);
