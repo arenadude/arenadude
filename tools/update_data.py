@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Refresh the data files that Arena Dude downloads from this repo.
 
-- CardsJson/cards.json        <- HearthstoneJSON (bumps cardsVersion.json when it changes)
+- CardsJson/cards.json        <- HearthstoneJSON, trimmed to the fields the app reads and the English names
+                                 (bumps cardsVersion.json when it changes)
 - Arena/arenaVersion.json     <- arena sets derived from Firestone arena card stats
                                  (bumps arenaVersion when the set list changes)
 - HearthArena/hearthArena.json <- heartharena.com tier list scores per class (bumps haVersion.json)
@@ -30,6 +31,10 @@ USER_AGENT = "ArenaDude-data-updater (+https://github.com/arenadude/arenadude)"
 # other sets only add a handful of entries per set.
 ARENA_SET_MIN_COVERAGE = 0.5
 
+# The only fields of cards.json the app reads (Utility::getCardAttribute and the json map). The full file, with
+# every card text in 14 languages, is 75 MB: a first run spent minutes on it before it knew any card.
+CARD_FIELDS = ("id", "name", "cardClass", "classes", "collectible", "cost", "rarity", "set", "type")
+
 
 def fetch(url, timeout=120):
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept-Encoding": "gzip"})
@@ -50,10 +55,17 @@ def write_json(path, obj, dry_run):
         path.write_text(json.dumps(obj, indent=2) + "\n", encoding="utf-8")
 
 
+def trim_card(card):
+    trimmed = {k: card[k] for k in CARD_FIELDS if k in card}
+    if isinstance(trimmed.get("name"), dict):
+        trimmed["name"] = {"enUS": trimmed["name"].get("enUS", "")}
+    return trimmed
+
+
 def update_cards_json(dry_run):
     print("cards.json")
-    data = fetch(HSJ_CARDS_URL)
-    cards = json.loads(data)
+    cards = [trim_card(c) for c in json.loads(fetch(HSJ_CARDS_URL))]
+    data = json.dumps(cards, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
     path = ROOT / "CardsJson" / "cards.json"
     if path.exists() and path.read_bytes() == data:
         print("  up to date")
