@@ -249,6 +249,13 @@ void MacHoverTracker::check()
 
     const QPoint pos = QCursor::pos();
     QWidget *widget = QApplication::widgetAt(pos);
+    //An overlay hidden with Hearthstone off screen is still visible to Qt (MacFullScreenOverlay only makes it
+    //transparent and lets the mouse through): its rows popped up card previews over the desktop
+    if(widget != nullptr)
+    {
+        NSView *view = nativeView(widget->window());
+        if(view != nil && view.window != nil && view.window.ignoresMouseEvents)     widget = nullptr;
+    }
 
     if(widget != lastWidget)
     {
