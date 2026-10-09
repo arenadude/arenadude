@@ -110,6 +110,21 @@ public:
     DraftCard newCard;      //Card to add to the candidates, empty code if it is already there
 };
 
+//What the mana/rarity review needs, copied in the GUI thread: the worker thread never reads the handler's members,
+//which an end of the draft clears meanwhile (Qt containers and cv::Mat share their data, the copies are cheap)
+class ReviewInput
+{
+public:
+    QList<QList<DraftCard>> candidates;
+    QList<DraftCard> slotCards;
+    cv::Rect screenRects[3], manaRects[3], rarityRects[3];
+    int screenIndex = -1;
+    QList<cv::Mat> manaTemplates, rarityTemplates;
+    QMap<QString, cv::MatND> cardsHist;
+    CardClass arenaHero = INVALID_CLASS, arenaHeroMulticlassPower = INVALID_CLASS;
+    bool multiclassArena = false;
+};
+
 
 class DraftHandler : public QObject
 {
@@ -149,7 +164,8 @@ private:
     int numCaptured;
     int captureFails = 0;                 //Screenshots failed in a row by the capture loop
     QElapsedTimer heroCaptureClock;        //From the start of the hero capture loop to the heroes read
-    bool drafting, heroDrafting, redrafting, redraftingReview, capturing, findingFrame, stopLoops;
+    bool drafting, heroDrafting, redrafting, redraftingReview, findingFrame, stopLoops;
+    std::atomic<bool> capturing;    //Also read by the mana/rarity review's worker thread
     bool heroesShown = false;   //The current heroes are scored (heroesScored)
     bool redraftPicksSeen = false;  //OCR read card names on the redraft's pick screen: REDRAFTING alone only offers it
     bool bundlePreviewOpen = false; //A legendary group's preview covers the cards: no capture
@@ -225,8 +241,8 @@ private:
     void showNewCards(DraftCard bestCards[]);
     void updateDeckScore(float cardRatingHA, float cardRatingFire);
     bool screenFound();
-    ScreenDetection findScreenRects();
-    bool findHeroRectsByOcr(ScreenDetection &screenDetection);
+    ScreenDetection findScreenRects(QList<QRect> trackerWindows);
+    bool findHeroRectsByOcr(ScreenDetection &screenDetection, const QList<QRect> &trackerWindows);
     void deleteDraftHeroWindow();
     void deleteDraftScoreWindow();
     void showOverlay();
@@ -273,11 +289,12 @@ private:
     void setStartEndLoop(int &startX, int &startY, int &endX, int &endY, const int centerX, const int centerY, const int jump);
     void getBestN(int &bestNs, double &bestL2s, const Rect &rectSmall, const cv::Mat &screenCapture, const QList<Mat> &matTemplates, const int numTemplates);
     cv::Mat getScreenMat();
-    ReviewSlot getBestMatchManaRarity(QList<DraftCard> candidates, const int pos, const Mat &screenBig,
+    static cv::Mat getScreenMat(int screenIndex);
+    ReviewSlot getBestMatchManaRarity(const ReviewInput &input, const int pos, const Mat &screenBig,
                                       const int imgMana, const CardRarity imgRarity);
-    DraftCard getBestAllMatchManaRarity(const MatND &screenCardHist, const int imgMana, const CardRarity imgRarity);
+    DraftCard getBestAllMatchManaRarity(const ReviewInput &input, const MatND &screenCardHist, const int imgMana, const CardRarity imgRarity);
     void startReviewBestCards();
-    QList<ReviewSlot> reviewBestCards(QList<QList<DraftCard>> candidates, QList<DraftCard> slotCards);
+    QList<ReviewSlot> reviewBestCards(ReviewInput input);
     void loadImgTemplates(QList<Mat> &imgTemplates, const QString &filename);
     bool areScreenRectsValid(Mat &screenCapture, int length);
     bool isSignatureCard(const QString &code);

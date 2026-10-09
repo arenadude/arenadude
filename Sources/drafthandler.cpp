@@ -7,21 +7,36 @@
     #include "Utils/macwindow.h"
 
 
+//The visible windows of the tracker. GUI thread only: a worker thread gets this list.
+static QList<QRect> trackerWindowRects()
+{
+    QList<QRect> rects;
+    for(QWidget *widget: QApplication::topLevelWidgets())
+    {
+        if(widget->isVisible())     rects << widget->frameGeometry();
+    }
+    return rects;
+}
+
+
 //The screenshot of screenRect shows the tracker's own windows over Hearthstone too (the mascot's bubble lists card
 //names): they are painted black before the OCR reads it
-static void hideTrackerWindows(QImage &image, const QRect &screenRect)
+static void hideTrackerWindows(QImage &image, const QRect &screenRect, const QList<QRect> &trackerWindows)
 {
     if(image.isNull() || screenRect.isEmpty())  return;
     const qreal scale = image.width() / static_cast<qreal>(screenRect.width());
     QPainter painter(&image);
-    for(QWidget *widget: QApplication::topLevelWidgets())
+    for(const QRect &window: trackerWindows)
     {
-        if(!widget->isVisible())    continue;
-        QRect area = widget->frameGeometry() & screenRect;
+        QRect area = window & screenRect;
         if(area.isEmpty())  continue;
         area.translate(-screenRect.topLeft());
         painter.fillRect(QRectF(area.x()*scale, area.y()*scale, area.width()*scale, area.height()*scale), Qt::black);
     }
+}
+static void hideTrackerWindows(QImage &image, const QRect &screenRect)
+{
+    hideTrackerWindows(image, screenRect, trackerWindowRects());
 }
 
 
@@ -44,6 +59,9 @@ DraftHandler::DraftHandler(QObject *parent, DeckHandler *deckHandler) : QObject(
     this->draftMethodHA = false;
     this->draftMethodFire = true;
     this->multiclassArena = false;
+    //Unknown until the arena's deck is read: the redraft watch can tick before that
+    this->arenaHero = INVALID_CLASS;
+    this->arenaHeroMulticlassPower = INVALID_CLASS;
     this->showMyWR = true;
     this->fireWRMap = nullptr;
     this->fireSamplesMap = nullptr;
@@ -1382,6 +1400,8 @@ void DraftHandler::closeFindScreenRects()
     stopLoops = true;
 
     if(findingFrame && futureFindScreenRects.isRunning())   futureFindScreenRects.waitForFinished();
+    //Its worker thread uses this handler: closing the app while it runs crashed
+    if(futureReviewBestCards.isRunning())   futureReviewBestCards.waitForFinished();
 }
 
 
@@ -3204,7 +3224,7 @@ void DraftHandler::startFindScreenRects()
         findScreenClock.start();
         findScreenStartMs = -1;
         findScreenCaptureMs = -1;
-        futureFindScreenRects.setFuture(QtConcurrent::run(&DraftHandler::findScreenRects, this));
+        futureFindScreenRects.setFuture(QtConcurrent::run(&DraftHandler::findScreenRects, this, trackerWindowRects()));
     }
 }
 
@@ -3304,7 +3324,7 @@ void DraftHandler::finishFindScreenRects()
 }
 
 
-ScreenDetection DraftHandler::findScreenRects()
+ScreenDetection DraftHandler::findScreenRects(QList<QRect> trackerWindows)
 {
     findScreenStartMs = findScreenClock.elapsed();
     //Pool threads run at the default QoS, which macOS moves to the efficiency cores while the app is in the background
@@ -3314,7 +3334,7 @@ ScreenDetection DraftHandler::findScreenRects()
     if(heroDrafting)
     {
         ScreenDetection screenDetection;
-        if(findHeroRectsByOcr(screenDetection))     return screenDetection;
+        if(findHeroRectsByOcr(screenDetection, trackerWindows))     return screenDetection;
     }
 
     std::vector<Point2f> templatePoints;
@@ -3503,7 +3523,7 @@ ScreenDetection DraftHandler::findScreenRects()
 //The hero slots from the class labels on the banners under the portraits (enUS), read in the Hearthstone window.
 //Each portrait square is above its label, sized by the distance between labels (measured on the 2026 client:
 //side 0.625 and center 0.505 above the label, in label distances).
-bool DraftHandler::findHeroRectsByOcr(ScreenDetection &screenDetection)
+bool DraftHandler::findHeroRectsByOcr(ScreenDetection &screenDetection, const QList<QRect> &trackerWindows)
 {
     if(Utility::getLocalLang() != "enUS")   return false;
     const QRect hsRect = MacOcr::hearthstoneWindowRect();
@@ -3513,7 +3533,7 @@ bool DraftHandler::findHeroRectsByOcr(ScreenDetection &screenDetection)
 
     QImage image = primaryScreen->grabWindow(0, hsRect.x(), hsRect.y(), hsRect.width(), hsRect.height()).toImage();
     if(image.isNull())  return false;
-    hideTrackerWindows(image, hsRect);
+    hideTrackerWindows(image, hsRect, trackerWindows);
     if(image.width() > 1400)    image = image.scaledToWidth(1400, Qt::SmoothTransformation);
     const QList<MacOcr::TextLine> lines = MacOcr::recognizeTextLines(image, "enUS");
 
@@ -3841,20 +3861,29 @@ void DraftHandler::startReviewBestCards()
         return;
     }
 
-    //The worker thread gets copies: the maps change in the GUI thread on each pick
-    QList<QList<DraftCard>> candidates;
-    QList<DraftCard> slotCards;
+    //The worker thread gets copies: the maps change in the GUI thread on each pick, and the end of the draft clears them
+    ReviewInput input;
     for(int i=0; i<3; i++)
     {
-        slotCards << draftCards[i];
+        input.slotCards << draftCards[i];
         QList<DraftCard> slotCandidates;
         for(const QString &code: (const QList<QString>)bestMatchesMaps[i].values())
         {
             slotCandidates << draftCardMaps[i][code];
         }
-        candidates << slotCandidates;
+        input.candidates << slotCandidates;
+        input.screenRects[i] = screenRects[i];
+        input.manaRects[i] = manaRects[i];
+        input.rarityRects[i] = rarityRects[i];
     }
-    futureReviewBestCards.setFuture(QtConcurrent::run(&DraftHandler::reviewBestCards, this, candidates, slotCards));
+    input.screenIndex = screenIndex;
+    input.manaTemplates = manaTemplates;
+    input.rarityTemplates = rarityTemplates;
+    input.cardsHist = cardsHist;
+    input.arenaHero = arenaHero;
+    input.arenaHeroMulticlassPower = arenaHeroMulticlassPower;
+    input.multiclassArena = multiclassArena;
+    futureReviewBestCards.setFuture(QtConcurrent::run(&DraftHandler::reviewBestCards, this, input));
 }
 void DraftHandler::finishReviewBestCards()
 {
@@ -3917,16 +3946,20 @@ void DraftHandler::finishReviewBestCards()
 }
 
 
-//Worker thread: only reads its arguments and the screen, returns an empty list to abort
-QList<ReviewSlot> DraftHandler::reviewBestCards(QList<QList<DraftCard>> candidates, QList<DraftCard> slotCards)
+//Worker thread: only reads its input, the screen and capturing (a pick ends the review), returns an empty list to abort
+QList<ReviewSlot> DraftHandler::reviewBestCards(ReviewInput input)
 {
+    QList<DraftCard> slotCards = input.slotCards;
+    const cv::Rect *manaRects = input.manaRects;
+    const cv::Rect *rarityRects = input.rarityRects;
+
     //manaRect no iniciado, estamos leyendo screenRects de settings
     if(manaRects[1].width<1 || manaRects[1].height<1 || slotCards[0].getCode().isEmpty())
     {
         return {};
     }
 
-    const cv::Mat screenBig = getScreenMat();
+    const cv::Mat screenBig = getScreenMat(input.screenIndex);
     if(screenBig.empty())   return {};
 
     double fx = 24.0/manaRects[1].width;
@@ -3948,7 +3981,7 @@ QList<ReviewSlot> DraftHandler::reviewBestCards(QList<QList<DraftCard>> candidat
         CardRarity imgRarity;
         const cv::Rect manaRectSmall = cv::Rect(manaRects[i].x*fx, manaRects[i].y*fy, 24, 32);
         const cv::Rect rarityRectSmall = cv::Rect(rarityRects[i].x*fx, rarityRects[i].y*fy, 8, 12);
-        getBestNManaRarity(imgMana, imgRarity, screenSmall, manaTemplates, rarityTemplates, manaRectSmall, rarityRectSmall);
+        getBestNManaRarity(imgMana, imgRarity, screenSmall, input.manaTemplates, input.rarityTemplates, manaRectSmall, rarityRectSmall);
 
         int cardMana = slotCards[i].getCost();
         CardRarity cardRarity = slotCards[i].getRarity();
@@ -3962,7 +3995,7 @@ QList<ReviewSlot> DraftHandler::reviewBestCards(QList<QList<DraftCard>> candidat
             if((cardMana < 10 || !validDraftCard) && (imgMana != -1))
             {
                 QString slotCode = reviewSlot.slotCode;
-                reviewSlot = getBestMatchManaRarity(candidates[i], i, screenBig, imgMana, imgRarity);
+                reviewSlot = getBestMatchManaRarity(input, i, screenBig, imgMana, imgRarity);
                 reviewSlot.slotCode = slotCode;
             }
             //Warning - Misma carta
@@ -3981,9 +4014,10 @@ QList<ReviewSlot> DraftHandler::reviewBestCards(QList<QList<DraftCard>> candidat
 }
 
 
-ReviewSlot DraftHandler::getBestMatchManaRarity(QList<DraftCard> candidates, const int pos, const cv::Mat &screenBig,
+ReviewSlot DraftHandler::getBestMatchManaRarity(const ReviewInput &input, const int pos, const cv::Mat &screenBig,
                                                 const int imgMana, const CardRarity imgRarity)
 {
+    QList<DraftCard> candidates = input.candidates[pos];
     ReviewSlot reviewSlot;
     for(int i=0; i<candidates.count(); i++)
     {
@@ -3996,8 +4030,8 @@ ReviewSlot DraftHandler::getBestMatchManaRarity(QList<DraftCard> candidates, con
         }
     }
 
-    const cv::MatND screenCardHist = getHist(screenBig(screenRects[pos]));
-    DraftCard draftCard = getBestAllMatchManaRarity(screenCardHist, imgMana, imgRarity);
+    const cv::MatND screenCardHist = getHist(screenBig(input.screenRects[pos]));
+    DraftCard draftCard = getBestAllMatchManaRarity(input, screenCardHist, imgMana, imgRarity);
     draftCard.setBestQualityMatch(1, true);
     reviewSlot.code = draftCard.getCode();
     if(!reviewSlot.code.isEmpty())  reviewSlot.newCard = draftCard;
@@ -4005,22 +4039,23 @@ ReviewSlot DraftHandler::getBestMatchManaRarity(QList<DraftCard> candidates, con
 }
 
 
-DraftCard DraftHandler::getBestAllMatchManaRarity(const cv::MatND &screenCardHist, const int imgMana, const CardRarity imgRarity)
+DraftCard DraftHandler::getBestAllMatchManaRarity(const ReviewInput &input, const cv::MatND &screenCardHist,
+                                                  const int imgMana, const CardRarity imgRarity)
 {
     double bestMatch = 1;
     QString bestCode = "";
     bool bestGold = false;
 
-    for(QMap<QString, cv::MatND>::const_iterator it=cardsHist.constBegin(); it!=cardsHist.constEnd(); it++)
+    for(QMap<QString, cv::MatND>::const_iterator it=input.cardsHist.constBegin(); it!=input.cardsHist.constEnd(); it++)
     {
         QString code = degoldCode(it.key());
         bool gold = isGoldCode(it.key());
 
-        if(multiclassArena && arenaHeroMulticlassPower != INVALID_CLASS)
+        if(input.multiclassArena && input.arenaHeroMulticlassPower != INVALID_CLASS)
         {
             QList<CardClass> cardClass = Utility::getClassFromCode(code);
-            if(!(cardClass.contains(NEUTRAL) || cardClass.contains(arenaHero) ||
-                 cardClass.contains(arenaHeroMulticlassPower))) continue;
+            if(!(cardClass.contains(NEUTRAL) || cardClass.contains(input.arenaHero) ||
+                 cardClass.contains(input.arenaHeroMulticlassPower))) continue;
         }
 
         int cost = Utility::getCardAttribute(code, "cost").toInt();
@@ -4151,7 +4186,10 @@ void DraftHandler::getBestNOnRect(const cv::Rect &rect, const int xOff, const in
                                     const QList<cv::Mat> &matTemplates, const int numTemplates,
                                     double &best, int &bestX, int &bestY, int &bestN)
 {
-    cv::Mat mat = screenCapture(cv::Rect(rect.x + xOff, rect.y + yOff, rect.width, rect.height));
+    //Hearthstone's window partly off the screen: the searched spot can leave the screenshot, and OpenCV would throw
+    const cv::Rect spot(rect.x + xOff, rect.y + yOff, rect.width, rect.height);
+    if((spot & cv::Rect(0, 0, screenCapture.cols, screenCapture.rows)) != spot)     return;
+    cv::Mat mat = screenCapture(spot);
 
     for(int i=0; i<numTemplates; i++)
     {
@@ -4174,6 +4212,10 @@ double DraftHandler::getL2Mat(const cv::Mat &matSample, const cv::Mat &matTempla
 
 
 cv::Mat DraftHandler::getScreenMat()
+{
+    return getScreenMat(screenIndex);
+}
+cv::Mat DraftHandler::getScreenMat(int screenIndex)
 {
     QList<QScreen *> screens = QGuiApplication::screens();
     if(screenIndex >= screens.count() || screenIndex < 0)  return cv::Mat();
