@@ -13,7 +13,9 @@
 
 //The opponent's top cards at the mulligan: only cards drawn enough times and in enough of the class's decks
 #define TOP_CARDS_MIN_DRAWN     200
-#define TOP_CARDS_MIN_SHARE     0.03
+//The mulligan tells what to play around: a strong legendary in 4% of the decks filled the list and isn't worth it.
+//At 15% every class still has about 10 cards.
+#define TOP_CARDS_MIN_SHARE     0.15
 //A card as good as its class still counts if it's common: compared with the class's winrate minus this
 #define TOP_CARDS_WINRATE_SLACK 0.02
 
