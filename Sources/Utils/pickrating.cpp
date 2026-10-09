@@ -1,8 +1,10 @@
 #include "pickrating.h"
 #include <cmath>
+#include <algorithm>
 
 
 float PickRating::fireMean = 0, PickRating::fireSpread = 0, PickRating::haMean = 0, PickRating::haSpread = 0;
+float PickRating::trustGames = PICK_RATING_TRUST_GAMES;
 bool PickRating::ready = false;
 
 
@@ -21,17 +23,40 @@ static void meanSpread(const QList<float> &values, float &mean, float &spread)
 float PickRating::trustedWinrate(float winrate, int games)
 {
     games = std::max(games, 0);
-    return (winrate*games + fireMean*PICK_RATING_TRUST_GAMES) / (games + PICK_RATING_TRUST_GAMES);
+    return (winrate*games + fireMean*trustGames) / (games + trustGames);
+}
+
+
+//The spread of the observed winrates minus their sampling noise is the true spread of the cards
+float PickRating::estimateTrustGames(const QList<Card> &pool)
+{
+    QList<float> rates;
+    float noise = 0;
+    for(const Card &card: pool)
+    {
+        if(card.fireWinrate <= 0 || card.fireGames < PICK_RATING_SPREAD_GAMES)  continue;
+        const float p = card.fireWinrate/100;
+        rates << p;
+        noise += p*(1 - p)/card.fireGames;
+    }
+    if(rates.count() < 10)  return PICK_RATING_TRUST_GAMES;
+    float mean, spread;
+    meanSpread(rates, mean, spread);
+    const float trueVariance = spread*spread - noise/rates.count();
+    if(trueVariance <= 0)   return PICK_RATING_TRUST_GAMES;
+    return std::clamp(mean*(1 - mean)/trueVariance, float(PICK_RATING_TRUST_MIN), float(PICK_RATING_TRUST_GAMES));
 }
 
 
 void PickRating::setPool(const QList<Card> &pool)
 {
-    //The class mean from the winrates with enough games, then the spread of the trusted winrates
+    //How much a winrate is trusted, the class mean from the winrates with enough games, then the spread of the
+    //trusted winrates
+    trustGames = estimateTrustGames(pool);
     QList<float> solid, trusted, ha;
     for(const Card &card: pool)
     {
-        if(card.fireWinrate > 0 && card.fireGames >= PICK_RATING_TRUST_GAMES)    solid << card.fireWinrate;
+        if(card.fireWinrate > 0 && card.fireGames >= trustGames)    solid << card.fireWinrate;
         if(card.haScore > 0)    ha << card.haScore;
     }
     float unused;
@@ -43,6 +68,12 @@ void PickRating::setPool(const QList<Card> &pool)
     meanSpread(trusted, unused, fireSpread);
     meanSpread(ha, haMean, haSpread);
     ready = (fireSpread > 0 || haSpread > 0);
+}
+
+
+int PickRating::getTrustGames()
+{
+    return qRound(trustGames);
 }
 
 

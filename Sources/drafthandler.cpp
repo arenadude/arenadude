@@ -2547,6 +2547,8 @@ void DraftHandler::updatePickRatingPool()
         pool << card;
     }
     PickRating::setPool(pool);
+    emit pDebug("Pick rating: a winrate is pulled halfway to the class mean at " +
+                QString::number(PickRating::getTrustGames()) + " games.");
 }
 
 
