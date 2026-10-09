@@ -1975,8 +1975,9 @@ void DraftHandler::captureBundlePreview()
 
     const QMap<QString, QString> nameMap = bundleNameMap;
     const QString legendary = bundleLegendary;
+    const QStringList known = bundlePreviews.value(legendary);
     const QString language = Utility::getLocalLang();
-    futureBundle.setFuture(QtConcurrent::run([image, nameMap, legendary, language]() {
+    futureBundle.setFuture(QtConcurrent::run([image, nameMap, legendary, known, language]() {
         QList<QPair<QString, QRectF>> cards;
         for(const MacOcr::TextLine &line: MacOcr::recognizeTextLines(image, language))
         {
@@ -2005,6 +2006,15 @@ void DraftHandler::captureBundlePreview()
             if(rect.center().x() < legendaryRect.center().x() + image.width()*0.1)    continue;
             if(rect.center().y() > legendaryRect.center().y())  continue;
             codes << card.first;
+        }
+        //Once the bundle is read the preview is the legendary with its bundle cards: the legendary's name alone was
+        //also the big card Hearthstone shows when the deck list (right) is hovered after the pick, and the next
+        //cards were never read
+        if(!known.isEmpty())
+        {
+            bool bundleSeen = false;
+            for(const QString &code: std::as_const(codes))  if(known.contains(code))   bundleSeen = true;
+            if(!bundleSeen)     return qMakePair(false, QStringList());
         }
         return qMakePair(true, codes.mid(0, 3));
     }));
@@ -2037,6 +2047,7 @@ void DraftHandler::finishBundlePreview()
     //the timer keeps watching for another preview until the pick.
     else if(bundlePreviewVisible || ++bundleMisses == 3)
     {
+        emit pDebug("Bundle preview closed after " + QString::number(bundleReads) + " reads.");
         bundlePreviewVisible = false;
         bundlePreviewOpen = false;
         setDraftStatus("Scanning the next cards...");
