@@ -1147,18 +1147,18 @@ void DraftHandler::captureRedraftReviewNames()
         static const QRegularExpression counterRe("\\d{2}\\s*/+\\s*30\\b");
         const QList<MacOcr::TextLine> lines = MacOcr::recognizeTextLines(image, language);
 
-        qreal deckListLeft = -1;
+        QPointF counter(-1, -1);
         for(const MacOcr::TextLine &line: lines)
         {
             if(counterRe.match(line.text).hasMatch())
             {
-                deckListLeft = line.rect.center().x() - image.height()*0.1;
+                counter = line.rect.center();
                 break;
             }
         }
         RedraftScreenRead read;
         //Not the review screen: the "Ready Up" screen before a game (enUS title), or anything else
-        if(deckListLeft < 0)
+        if(counter.x() < 0)
         {
             for(const MacOcr::TextLine &line: lines)
             {
@@ -1167,15 +1167,27 @@ void DraftHandler::captureRedraftReviewNames()
             return read;
         }
 
+        //Only the names on the 5 discard slots: a deck list card the mouse is over shows big next to the list, and was
+        //taken as discarded. The slots' name banners from the deck counter, in window heights (Hearthstone scales by
+        //the height; measured on the 2026 client): the hovered card's name sits 0.09 heights right of the right slots.
+        static const QPointF slotNames[5] = {{-0.933, -0.569}, {-0.933, -0.168}, {-0.617, -0.439},
+                                             {-0.301, -0.569}, {-0.301, -0.168}};
+        const qreal height = image.height();
+        QString slotCodes[5];
         read.screen = RedraftScreenDiscard;
         for(const MacOcr::TextLine &line: lines)
         {
-            //By the center: deck list lines can start with a "NEW!" badge left of the list
-            if(line.rect.center().x() >= deckListLeft)  continue;
-            QString code = matchCardName({line.text}, nameMap);
-            if(!code.isEmpty())     read.codes << code;
+            const QPointF center = line.rect.center();
+            for(int i=0; i<5; i++)
+            {
+                if(!slotCodes[i].isEmpty())     continue;
+                const QPointF slot = counter + slotNames[i]*height;
+                if(qAbs(center.x() - slot.x()) > 0.05*height || qAbs(center.y() - slot.y()) > 0.05*height)  continue;
+                slotCodes[i] = matchCardName({line.text}, nameMap);
+                break;
+            }
         }
-        read.codes = read.codes.mid(0, 5);
+        for(const QString &code: slotCodes)     if(!code.isEmpty())     read.codes << code;
         return read;
     }));
 }
