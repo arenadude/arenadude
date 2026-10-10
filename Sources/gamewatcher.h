@@ -55,6 +55,7 @@ private:
     void processZone(QString &line, qint64 numLine);
     void startReadingDeck();
     void emitDeckSnapshot();
+    void dropDeckSnapshot();
     void endReadingDeck();
     QString getNamePreSharp(QString name);
 

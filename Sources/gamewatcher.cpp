@@ -66,6 +66,15 @@ void GameWatcher::startReadingDeck()
 }
 
 
+//The run is over: the snapshot read for its deck must not wait for the next ACTIVE_DRAFT_DECK, the end of the next draft
+//(the finished run's deck replaced the new one there, and the mascot's deck average was of 2 known cards)
+void GameWatcher::dropDeckSnapshot()
+{
+    deckSnapshotSync = false;
+    deckSnapshot.clear();
+}
+
+
 //The cards Hearthstone lists for the current deck, to correct the tracker's: the cards discarded in a redraft are
 //read by OCR on the discard screen, which can be wrong
 void GameWatcher::emitDeckSnapshot()
@@ -291,6 +300,7 @@ void GameWatcher::processArena(QString &line, qint64 numLine)
                             "DraftManager\\.OnChoicesAndContents - Draft Deck ID: \\d+, Hero Card ="), match))
     {
         emit pDebug("New arena: choosing heroe.", numLine);
+        dropDeckSnapshot();
         emit heroDraftDeck();//No hero
         emit arenaChoosingHeroe();  //(connect) beginHeroDraft
     }
@@ -318,6 +328,7 @@ void GameWatcher::processArena(QString &line, qint64 numLine)
     else if(line.contains("SetDraftMode - IN_REWARDS"))
     {
         emit pDebug("Found SetDraftMode - IN_REWARDS.", numLine);
+        dropDeckSnapshot();
         emit heroDraftDeck();//No hero
         emit inRewards();   //Remove mechanics window
     }
