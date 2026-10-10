@@ -26,7 +26,8 @@ static QList<QRect> trackerWindowRects()
 //names): they are painted black before the OCR reads it
 static void hideTrackerWindows(QImage &image, const QRect &screenRect, const QList<QRect> &trackerWindows)
 {
-    if(image.isNull() || screenRect.isEmpty())  return;
+    //Only Hearthstone's window was captured: painting the tracker's windows would hide the game under them
+    if(image.isNull() || screenRect.isEmpty() || !Utility::grabShowsOtherWindows())  return;
     //The painter works in the image's device independent pixels: a Retina screenshot (pixel ratio 2) scaled by its
     //pixels put every box twice as far and as big, and the mascot's bubble was read as the redraft's discards
     const qreal scale = image.width() / image.devicePixelRatio() / screenRect.width();
@@ -3363,7 +3364,7 @@ void DraftHandler::finishFindScreenRects()
         findScreenFails = 0;
         if(!isPickShown() && !bundlePreviewOpen)  setDraftStatus(heroDrafting?"Scanning heroes...":"Scanning cards...");
         emit pDebug("Hearthstone arena screen detected on screen " + QString::number(screenIndex) +
-                    ". " + (isSame?QString("It's"):QString("Not")) + " the same.");
+                    ". " + (isSame?QString("It's"):QString("Not")) + " the same. Captured: " + Utility::lastCaptureText() + ".");
 
         if(needCreate)
         {

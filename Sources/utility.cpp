@@ -1,6 +1,8 @@
 #include "utility.h"
 #include "constants.h"
 #include "Utils/replayscreen.h"
+#include "Utils/macscreen.h"
+#include <atomic>
 #include <QtWidgets>
 #include "opencv2/features2d.hpp"
 #include "opencv2/calib3d.hpp"
@@ -550,13 +552,63 @@ QImage Utility::getScreenshot(QScreen *screen)
 }
 
 
-//The rect (points, global) of the screens; a replay's recorded frame in a log replay with screens
+static std::atomic<int> lastCapture{Utility::CaptureWindow};
+static thread_local bool lastGrabShowsOtherWindows = false;
+
+
+//The rect (points, global) of the screens, with only Hearthstone's window in it (black around it): the windows over the
+//game (the tracker's, chats, notifications) aren't read. The whole screen if that capture fails; a replay's recorded
+//frame in a log replay with screens.
 QImage Utility::grabScreen(const QRect &rect)
 {
+    lastGrabShowsOtherWindows = false;
     if(ReplayScreen::isActive())    return ReplayScreen::grab(rect);
+
+    QImage window;
+    QRect frame;
+    const MacScreen::Result result = MacScreen::hearthstoneWindow(window, frame);
+    if(result == MacScreen::NoWindow)
+    {
+        lastCapture = CaptureNoWindow;
+        return QImage();
+    }
+    if(result == MacScreen::Captured && !frame.isEmpty())
+    {
+        lastCapture = CaptureWindow;
+        //As QScreen::grabWindow(): physical pixels, with their pixel ratio
+        const qreal ratio = window.width() / static_cast<qreal>(frame.width());
+        QImage canvas(qRound(rect.width()*ratio), qRound(rect.height()*ratio), QImage::Format_ARGB32_Premultiplied);
+        canvas.fill(Qt::black);
+        QPainter painter(&canvas);
+        painter.drawImage(QPointF((frame.x() - rect.x())*ratio, (frame.y() - rect.y())*ratio), window);
+        painter.end();
+        canvas.setDevicePixelRatio(ratio);
+        return canvas;
+    }
+
+    lastCapture = CaptureScreen;
+    lastGrabShowsOtherWindows = true;
     QScreen *primaryScreen = QGuiApplication::primaryScreen();
     if(!primaryScreen)  return QImage();
     return primaryScreen->grabWindow(0, rect.x(), rect.y(), rect.width(), rect.height()).toImage();
+}
+
+
+//The last grabScreen of this thread took the whole screen: the windows over Hearthstone are in it
+bool Utility::grabShowsOtherWindows()
+{
+    return lastGrabShowsOtherWindows;
+}
+
+
+QString Utility::lastCaptureText()
+{
+    switch(lastCapture.load())
+    {
+        case CaptureWindow:     return "Hearthstone's window alone";
+        case CaptureNoWindow:   return "no Hearthstone window";
+        default:                return "the whole screen, the window capture failed";
+    }
 }
 
 

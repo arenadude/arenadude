@@ -115,6 +115,9 @@ public:
     static QString removeAccents(const QString &s);
     static QImage getScreenshot(QScreen *screen);
     static QImage grabScreen(const QRect &rect);
+    static bool grabShowsOtherWindows();
+    enum CaptureMode { CaptureWindow, CaptureNoWindow, CaptureScreen };
+    static QString lastCaptureText();
     static SceneFeatures sceneFeatures(const cv::Mat &mat);
     static ScreenFeatures screenFeatures(QScreen *screen, QImage image);
     static std::vector<Point2f> findTemplateOnScreen(const QString &templateImage, const ScreenFeatures &screen,
