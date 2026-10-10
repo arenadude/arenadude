@@ -27,7 +27,9 @@ static QList<QRect> trackerWindowRects()
 static void hideTrackerWindows(QImage &image, const QRect &screenRect, const QList<QRect> &trackerWindows)
 {
     if(image.isNull() || screenRect.isEmpty())  return;
-    const qreal scale = image.width() / static_cast<qreal>(screenRect.width());
+    //The painter works in the image's device independent pixels: a Retina screenshot (pixel ratio 2) scaled by its
+    //pixels put every box twice as far and as big, and the mascot's bubble was read as the redraft's discards
+    const qreal scale = image.width() / image.devicePixelRatio() / screenRect.width();
     QPainter painter(&image);
     for(const QRect &window: trackerWindows)
     {
