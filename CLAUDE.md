@@ -29,12 +29,12 @@ Then: reproduce it on the fixture's replay (`tools/replay_session.py`, with `--s
 Before a build goes to the user (a dev build to play) or to a release, check it against all the fixtures:
 
 ```sh
-python3 tools/check_build.py --out <scratchpad>/check-<sha> --baseline <the last good check's --out>
+python3 tools/check_build.py --out <scratchpad>/check-<sha> --baseline ~/Desktop/hs\ checks/baseline-<newest sha>
 ```
 
 - It builds the working tree (or `--app`), replays every fixture session and compares each run with the baseline's; `report.txt` has the differences. Add `--asan` when the change touches threads, memory or containers shared with worker threads. About an hour: the screen sessions run at real time.
 - Exit 0, or every difference explained as expected from the change, before handing the build over. Say in the reply what was checked and what wasn't.
-- No baseline yet (or it's gone with the scratchpad): run the check on the last good build first (`--app`, e.g. the previous commit's build) and keep that `--out`.
+- Checks are kept in `~/Desktop/hs checks/` (outside the repo, next to the fixtures: the runs hold BattleTags), named `baseline-<sha>`; the newest one is the baseline. A build the user played without bugs and whose check passed becomes the next baseline (its `--out` goes there). None there: run the check on the last good build first (`--app`).
 - What the replays can't see, and needs the user's play session: other screen formats (only a 16:10 fullscreen MacBook is recorded), windowed Hearthstone, macOS Game Mode, dialogs, Hearthstone screens no fixture has.
 - Dev builds for the user: `qmake ... DEFINES+=AT_DEV_BUILD` (keeps the unread screens), copied to a uniquely named, ad-hoc signed .app (macOS ties the Screen Recording grant to it).
 
