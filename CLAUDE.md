@@ -24,7 +24,7 @@ Screenshots: if the user attached one to the chat, use that and don't touch the 
 
 ## Project
 
-Arena Dude (formerly the Arena Tracker fork, AT; the code still says AT in places) is a Qt 6 / C++ draft coach for Hearthstone Arena with a pixel mascot. **macOS only**: the Windows and Linux code was deleted (a port would be written again). Single qmake project, no unit tests (`tools/replay_session.py` replays recorded logs), no linter. Code comments are frequently in Spanish.
+Arena Dude (formerly the Arena Tracker fork, AT; the code still says AT in places) is a Qt 6 / C++ draft coach for Hearthstone Arena with a pixel mascot. **macOS only**: the Windows and Linux code was deleted (a port would be written again). Single qmake project, no unit tests (`tools/replay_session.py` replays recorded logs, and with `--screen` a fixture's screen recordings, see `Sources/Utils/replayscreen.h`; `tools/compare_replays.py` compares two runs or a run with the live log), no linter. Code comments are frequently in Spanish.
 
 ## Build
 

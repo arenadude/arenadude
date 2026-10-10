@@ -1,5 +1,6 @@
 #include "utility.h"
 #include "constants.h"
+#include "Utils/replayscreen.h"
 #include <QtWidgets>
 #include "opencv2/features2d.hpp"
 #include "opencv2/calib3d.hpp"
@@ -544,11 +545,18 @@ QString Utility::removeAccents(const QString &s)
 
 QImage Utility::getScreenshot(QScreen *screen)
 {
-    QScreen *primaryScreen = QGuiApplication::primaryScreen();
-    if(!primaryScreen || !screen)   return QImage();
+    if(!screen)     return QImage();
+    return grabScreen(screen->geometry());
+}
 
-    QRect rect = screen->geometry();
-    return primaryScreen->grabWindow(0,rect.x(),rect.y(),rect.width(),rect.height()).toImage();
+
+//The rect (points, global) of the screens; a replay's recorded frame in a log replay with screens
+QImage Utility::grabScreen(const QRect &rect)
+{
+    if(ReplayScreen::isActive())    return ReplayScreen::grab(rect);
+    QScreen *primaryScreen = QGuiApplication::primaryScreen();
+    if(!primaryScreen)  return QImage();
+    return primaryScreen->grabWindow(0, rect.x(), rect.y(), rect.width(), rect.height()).toImage();
 }
 
 

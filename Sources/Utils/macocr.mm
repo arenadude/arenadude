@@ -1,4 +1,5 @@
 #include "macocr.h"
+#include "replayscreen.h"
 #import <Foundation/Foundation.h>
 #import <Vision/Vision.h>
 #import <CoreGraphics/CoreGraphics.h>
@@ -56,6 +57,7 @@ QList<MacOcr::TextLine> MacOcr::recognizeTextLines(const QImage &image, const QS
 
 QRect MacOcr::hearthstoneWindowRect()
 {
+    if(ReplayScreen::isActive())    return ReplayScreen::hearthstoneRect();
     QRect bestRect;
 
     @autoreleasepool

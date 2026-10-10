@@ -1,4 +1,5 @@
 #include "macwindow.h"
+#include "replayscreen.h"
 #include <QtWidgets>
 #import <AppKit/AppKit.h>
 
@@ -114,6 +115,7 @@ extern "C" CFArrayRef CGSCopyManagedDisplaySpaces(int connection);
 //A Hearthstone window is on screen: in the current Space and not minimized
 bool MacFullScreenOverlay::isHearthstoneOnScreen()
 {
+    if(ReplayScreen::isActive())    return true;
     bool onScreen = false;
 
     @autoreleasepool
@@ -140,6 +142,7 @@ bool MacFullScreenOverlay::isHearthstoneOnScreen()
 //notch it stays visible over fullscreen apps.
 bool MacFullScreenOverlay::isFullScreenSpace()
 {
+    if(ReplayScreen::isActive())    return true;    //The recorded Hearthstone, fullscreen
     bool fullScreenSpace = false;
 
     @autoreleasepool

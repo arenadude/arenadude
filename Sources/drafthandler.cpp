@@ -5,12 +5,15 @@
 #include <QtWidgets>
     #include "Utils/macocr.h"
     #include "Utils/macwindow.h"
+#include "Utils/replayscreen.h"
 
 
 //The visible windows of the tracker. GUI thread only: a worker thread gets this list.
 static QList<QRect> trackerWindowRects()
 {
     QList<QRect> rects;
+    //A replayed screen shows the recorded tracker's windows, not these ones
+    if(ReplayScreen::isActive())    return rects;
     for(QWidget *widget: QApplication::topLevelWidgets())
     {
         if(widget->isVisible())     rects << widget->frameGeometry();
@@ -1049,10 +1052,7 @@ void DraftHandler::checkRedraftScreen()
     QRect counterRect(hsRect.x() + hsRect.width()*7/10, hsRect.y() + hsRect.height()*3/4,
                       hsRect.width()*3/10, hsRect.height()/4);
 
-    QScreen *primaryScreen = QGuiApplication::primaryScreen();
-    if(primaryScreen == nullptr)    return;
-    QImage image = primaryScreen->grabWindow(0, counterRect.x(), counterRect.y(),
-                                             counterRect.width(), counterRect.height()).toImage();
+    QImage image = Utility::grabScreen(counterRect);
     if(image.isNull())  return;
     hideTrackerWindows(image, counterRect);
     if(image.width() > 800)     image = image.scaledToWidth(800, Qt::SmoothTransformation);
@@ -1091,9 +1091,7 @@ void DraftHandler::captureRedraftReviewNames()
 
     QRect hsRect = MacOcr::hearthstoneWindowRect();
     if(hsRect.isNull())     return;
-    QScreen *primaryScreen = QGuiApplication::primaryScreen();
-    if(primaryScreen == nullptr)    return;
-    QImage image = primaryScreen->grabWindow(0, hsRect.x(), hsRect.y(), hsRect.width(), hsRect.height()).toImage();
+    QImage image = Utility::grabScreen(hsRect);
     if(image.isNull())  return;
     hideTrackerWindows(image, hsRect);
     if(image.width() > 1400)    image = image.scaledToWidth(1400, Qt::SmoothTransformation);
@@ -1889,9 +1887,8 @@ void DraftHandler::readHeroClasses(const cv::Mat &screenCapture)
 static QImage grabHearthstoneWindow(int maxWidth)
 {
     QRect hsRect = MacOcr::hearthstoneWindowRect();
-    QScreen *primaryScreen = QGuiApplication::primaryScreen();
-    if(hsRect.isNull() || primaryScreen == nullptr)     return QImage();
-    QImage image = primaryScreen->grabWindow(0, hsRect.x(), hsRect.y(), hsRect.width(), hsRect.height()).toImage();
+    if(hsRect.isNull())     return QImage();
+    QImage image = Utility::grabScreen(hsRect);
     hideTrackerWindows(image, hsRect);
     if(image.width() > maxWidth)    image = image.scaledToWidth(maxWidth, Qt::SmoothTransformation);
     return image;
@@ -3561,10 +3558,9 @@ bool DraftHandler::findHeroRectsByOcr(ScreenDetection &screenDetection, const QL
     if(Utility::getLocalLang() != "enUS")   return false;
     const QRect hsRect = MacOcr::hearthstoneWindowRect();
     QScreen *screen = hsRect.isNull() ? nullptr : QGuiApplication::screenAt(hsRect.center());
-    QScreen *primaryScreen = QGuiApplication::primaryScreen();
-    if(screen == nullptr || primaryScreen == nullptr)   return false;
+    if(screen == nullptr)   return false;
 
-    QImage image = primaryScreen->grabWindow(0, hsRect.x(), hsRect.y(), hsRect.width(), hsRect.height()).toImage();
+    QImage image = Utility::grabScreen(hsRect);
     if(image.isNull())  return false;
     hideTrackerWindows(image, hsRect, trackerWindows);
     if(image.width() > 1400)    image = image.scaledToWidth(1400, Qt::SmoothTransformation);

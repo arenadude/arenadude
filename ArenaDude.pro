@@ -31,6 +31,7 @@ SOURCES += Sources/main.cpp\
     Sources/Widgets/draftscorewindow.cpp \
     Sources/Widgets/splashwindow.cpp \
     Sources/Utils/pickrating.cpp \
+    Sources/Utils/replayscreen.cpp \
     Sources/Widgets/mascotwindow.cpp \
     Sources/Widgets/scoreplate.cpp \
     Sources/Widgets/cardwindow.cpp \
@@ -55,6 +56,7 @@ HEADERS  += Sources/mainwindow.h \
     Sources/Widgets/draftscorewindow.h \
     Sources/Widgets/splashwindow.h \
     Sources/Utils/pickrating.h \
+    Sources/Utils/replayscreen.h \
     Sources/Widgets/mascotwindow.h \
     Sources/Widgets/scoreplate.h \
     Sources/Widgets/cardwindow.h \
