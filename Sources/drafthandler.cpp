@@ -2227,43 +2227,55 @@ QString DraftHandler::matchCardName(const QStringList &lines, const QMap<QString
     for(const QString &line: lines)     texts << normalize(line);
     if(lines.count() > 1)               texts << normalize(lines.join(""));
 
-    double best = 0, second = 0;
-    QString bestCode;
-    for(QMap<QString, QString>::const_iterator it=nameMap.constBegin(); it!=nameMap.constEnd(); it++)
-    {
-        const QString name = normalize(it.key());
-        double sim = 0;
-        for(const QString &text: qAsConst(texts))
+    //cutNames: also as a name cut by a banner edge
+    auto bestMatch = [&](bool cutNames) {
+        double best = 0, second = 0;
+        QString bestCode;
+        for(QMap<QString, QString>::const_iterator it=nameMap.constBegin(); it!=nameMap.constEnd(); it++)
         {
-            sim = std::max(sim, similarity(text, name));
-            if(partial)     sim = std::max(sim, partSimilarity(text, name));
-            //Name cut by a banner edge ("Holy Eggbea", "cover Cultist"): compare with the start
-            //or the end of the name if at least 60% of it was read.
-            if(text.length() < name.length() && text.length() >= 0.6*name.length())
+            const QString name = normalize(it.key());
+            double sim = 0;
+            for(const QString &text: qAsConst(texts))
             {
-                sim = std::max(sim, similarity(text, name.left(text.length())));
-                sim = std::max(sim, similarity(text, name.right(text.length())));
+                sim = std::max(sim, similarity(text, name));
+                if(partial)     sim = std::max(sim, partSimilarity(text, name));
+                //Name cut by a banner edge ("Holy Eggbea", "cover Cultist"): compare with the start
+                //or the end of the name if at least 60% of it was read.
+                if(cutNames && text.length() < name.length() && text.length() >= 0.6*name.length())
+                {
+                    sim = std::max(sim, similarity(text, name.left(text.length())));
+                    sim = std::max(sim, similarity(text, name.right(text.length())));
+                }
+            }
+
+            if(sim > best)
+            {
+                if(it.value() != bestCode)  second = best;
+                best = sim;
+                bestCode = it.value();
+            }
+            else if(sim > second && it.value() != bestCode)
+            {
+                second = sim;
             }
         }
 
-        if(sim > best)
-        {
-            if(it.value() != bestCode)  second = best;
-            best = sim;
-            bestCode = it.value();
-        }
-        else if(sim > second && it.value() != bestCode)
-        {
-            second = sim;
-        }
-    }
+        //Accept only a close match with no other card almost as close
+        if(best >= (partial ? 0.7 : 0.8) && (best - second) >= 0.1)   return bestCode;
+        //Or a looser match far ahead of every other card: the bent names are read with errors at their ends
+        //("San of the Kaldores" 0.75 against 0.44 of the next card). Readings of other text stay below 0.6.
+        if(!partial && best >= 0.65 && (best - second) >= 0.2)   return bestCode;
+        return QString();
+    };
 
-    //Accept only a close match with no other card almost as close
-    if(best >= (partial ? 0.7 : 0.8) && (best - second) >= 0.1)   return bestCode;
-    //Or a looser match far ahead of every other card: the bent names are read with errors at their ends
-    //("San of the Kaldores" 0.75 against 0.44 of the next card). Readings of other text stay below 0.6.
-    if(!partial && best >= 0.65 && (best - second) >= 0.2)   return bestCode;
-    return "";
+    //A whole name read first: "Envoy of the Ena" (Envoy of the End, one letter off) was as close to the start of
+    //"Envoy of the Gla(de)", taken as cut, and neither was accepted
+    if(!partial)
+    {
+        const QString code = bestMatch(false);
+        if(!code.isEmpty())     return code;
+    }
+    return bestMatch(true);
 }
 
 
@@ -3224,8 +3236,18 @@ void DraftHandler::startFindScreenRects()
         findScreenClock.start();
         findScreenStartMs = -1;
         findScreenCaptureMs = -1;
-        futureFindScreenRects.setFuture(QtConcurrent::run(&DraftHandler::findScreenRects, this, trackerWindowRects()));
+        findScreenRunMode = findScreenMode();
+        futureFindScreenRects.setFuture(QtConcurrent::run(&DraftHandler::findScreenRects, this, trackerWindowRects(),
+                                                          findScreenRunMode));
     }
+}
+
+
+FindScreenMode DraftHandler::findScreenMode()
+{
+    if(heroDrafting)        return FindHeroes;
+    if(redraftingReview)    return FindRedraftReview;
+    return FindDraft;
 }
 
 
@@ -3251,6 +3273,13 @@ void DraftHandler::finishFindScreenRects()
     if(stopLoops)
     {
         findingFrame = false;
+        return;
+    }
+    //Started on another screen (e.g. the hero picked while it looked for the heroes): its slots are not these ones
+    if(findScreenRunMode != findScreenMode())
+    {
+        emit pDebug("Arena screen search outdated by a new screen. Looking again...");
+        startFindScreenRects();
         return;
     }
 
@@ -3324,8 +3353,12 @@ void DraftHandler::finishFindScreenRects()
 }
 
 
-ScreenDetection DraftHandler::findScreenRects(QList<QRect> trackerWindows)
+ScreenDetection DraftHandler::findScreenRects(QList<QRect> trackerWindows, FindScreenMode mode)
 {
+    //The mode it started with, not the members: picking the hero meanwhile made it read 18 template points of 6
+    const bool heroDrafting = (mode == FindHeroes);
+    const bool redraftingReview = (mode == FindRedraftReview);
+
     findScreenStartMs = findScreenClock.elapsed();
     //Pool threads run at the default QoS, which macOS moves to the efficiency cores while the app is in the background
     pthread_set_qos_class_self_np(QOS_CLASS_USER_INITIATED, 0);

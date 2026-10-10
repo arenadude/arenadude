@@ -78,6 +78,10 @@ struct RedraftScreenRead
 };
 
 
+//The screen an arena screen search looks for
+enum FindScreenMode { FindDraft, FindHeroes, FindRedraftReview };
+
+
 class SDBasic
 {
 public:
@@ -176,6 +180,7 @@ private:
     QString justPickedCard; //Evita doble pick card en Arena.log
     bool draftMethodHA, draftMethodFire;
     QFutureWatcher<ScreenDetection> futureFindScreenRects;
+    FindScreenMode findScreenRunMode = FindDraft;  //What the running search looks for
     QElapsedTimer findScreenClock;         //From the start of findScreenRects to its result
     std::atomic<qint64> findScreenStartMs{0}, findScreenCaptureMs{0};
     bool extendedCapture;
@@ -241,7 +246,8 @@ private:
     void showNewCards(DraftCard bestCards[]);
     void updateDeckScore(float cardRatingHA, float cardRatingFire);
     bool screenFound();
-    ScreenDetection findScreenRects(QList<QRect> trackerWindows);
+    ScreenDetection findScreenRects(QList<QRect> trackerWindows, FindScreenMode mode);
+    FindScreenMode findScreenMode();
     bool findHeroRectsByOcr(ScreenDetection &screenDetection, const QList<QRect> &trackerWindows);
     void deleteDraftHeroWindow();
     void deleteDraftScoreWindow();
