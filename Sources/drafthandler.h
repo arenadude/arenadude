@@ -69,6 +69,15 @@ struct RedraftSuggestion
 };
 
 
+//A big number of the arena screens (the Ready Up medal, the rewards chest): 0-12, or why it wasn't read (BigNumberFail),
+//and all the text the OCR read, logged when it's never read
+struct BigNumberRead
+{
+    int wins = -1;
+    QString text;
+};
+
+
 //What the OCR of the Hearthstone window found while redraftingReview
 enum RedraftScreen { RedraftScreenOther, RedraftScreenDiscard, RedraftScreenReadyUp };
 struct RedraftScreenRead
@@ -197,10 +206,11 @@ private:
     //the redraft picks happened when AT could not see them (Hearthstone restarted in the review screen)
     QTimer *redraftWatchTimer;
     QFutureWatcher<int> futureRedraftCounter;
-    QFutureWatcher<int> futureRewardsWins;
+    QFutureWatcher<BigNumberRead> futureRewardsWins;
     int rewardsWinsTries = 0;
     int rewardsWinsWaits = 0;   //Tries put off while Hearthstone isn't on screen
-    QFutureWatcher<int> futureReadyUpWins;
+    QFutureWatcher<BigNumberRead> futureReadyUpWins;
+    QImage bigNumberImage;      //The last screen read for a big number
     int readyUpWinsTries = 0;
     int readyUpWinsWaits = 0;
     //macOS: the cards picked in the redraft review screen are found by reading their names
@@ -314,6 +324,7 @@ private:
     void readDeckList();
     void buildBundleNameMap();
     void showDraftNotice(const QString &text);
+    void logUnreadBigNumber(const QString &what, const BigNumberRead &read);
     void beginRedraftReview();
     void emitDraftFinished();
     void updatePickRatingPool();

@@ -40,7 +40,7 @@ qmake ArenaDude.pro && make        # or open ArenaDude.pro in Qt Creator, Releas
 
 Release: bump `VERSION`, build, `tools/package_mac.py <build>/ArenaDude.app "<out>/Arena Dude.app"` (self-contained, named and versioned, ad-hoc signed), `ditto -c -k --keepParent "Arena Dude.app" Arena.Dude.Mac.zip` (always this name: the landing page and the release notes link `releases/latest/download/Arena.Dude.Mac.zip`), publish a GitHub release `vX.Y.Z` with the zip, and only then append `vX.Y.Z` to `versionFree` in `Version/version.json` (it goes live on push: listing a version before its release sends users to a missing page). The app is not notarized: the release notes explain how to open it the first time (System Settings → Privacy & Security → Open Anyway) and grant Screen Recording.
 
-Debug toggles (compile-time) are the `DEBUG_*` defines in `Sources/utility.h`.
+Debug toggles (compile-time) are the `DEBUG_*` defines in `Sources/utility.h`. Test builds handed to the user get `qmake ... DEFINES+=AT_DEV_BUILD`: they keep the screens the OCR couldn't read in `~/Arena Dude/Unread` (a release only logs the text read, the screen can show the player's other apps).
 
 ## Architecture
 

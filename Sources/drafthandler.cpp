@@ -932,31 +932,43 @@ void DraftHandler::tryReadRewardsWins()
     }
     rewardsWinsTries++;
     const QImage image = grabHearthstoneWindow(1400);
+    bigNumberImage = image;
 
     futureRewardsWins.setFuture(QtConcurrent::run([image]() {
-        if(image.isNull())  return int(NoWindow);
+        BigNumberRead read;
+        if(image.isNull())
+        {
+            read.wins = NoWindow;
+            return read;
+        }
         //"Run Complete!" is the anchor: the number is under it, in its widths (measured on 2026 clients)
         QRectF label;
+        QStringList texts;
         for(const MacOcr::TextLine &line: MacOcr::recognizeTextLines(image, "enUS", true))
         {
+            texts << line.text;
             if(line.text.contains("Run Complete", Qt::CaseInsensitive))     label = line.rect;
         }
-        if(label.isNull())  return int(NoAnchor);
+        read.text = texts.join(" | ");
+        read.wins = NoAnchor;
+        if(label.isNull())  return read;
         const qreal w = label.width();
         const QImage rgb = image.convertToFormat(QImage::Format_RGB32);
         const QRect crop = QRect(qRound(label.center().x() - 0.22*w), qRound(label.center().y() + 0.97*w),
                                  qRound(0.44*w), qRound(0.48*w)) & rgb.rect();
-        if(crop.isEmpty())  return int(NoAnchor);
+        if(crop.isEmpty())  return read;
 
         const int wins = readBigNumber(rgb, crop);
-        return (wins < 0) ? int(NoNumber) : wins;
+        read.wins = (wins < 0) ? int(NoNumber) : wins;
+        return read;
     }));
 }
 
 
 void DraftHandler::finishReadRewardsWins()
 {
-    const int wins = futureRewardsWins.result();
+    const BigNumberRead read = futureRewardsWins.result();
+    const int wins = read.wins;
     if(wins >= 0)
     {
         emit pDebug("Rewards chest: " + QString::number(wins) + " wins.");
@@ -965,7 +977,7 @@ void DraftHandler::finishReadRewardsWins()
     else if(rewardsWinsTries < 8)   QTimer::singleShot(1000, this, SLOT(tryReadRewardsWins()));
     else
     {
-        emit pDebug("Rewards chest not read: " + bigNumberFailText(wins) + ".");
+        logUnreadBigNumber("Rewards chest", read);
         emit rewardsWinsRead(-1);
     }
 }
@@ -992,9 +1004,15 @@ void DraftHandler::tryReadReadyUpWins()
     }
     readyUpWinsTries++;
     const QImage image = grabHearthstoneWindow(1400);
+    bigNumberImage = image;
 
     futureReadyUpWins.setFuture(QtConcurrent::run([image]() {
-        if(image.isNull())  return int(NoWindow);
+        BigNumberRead read;
+        if(image.isNull())
+        {
+            read.wins = NoWindow;
+            return read;
+        }
         //"Wins:" and "Losses:" are the anchors: the medal is under "Wins:", in their distance (measured on 2026 clients)
         //The fast recognizer mixes up i and l ("Wlns:"): compared letters only, those as one
         auto key = [](const QString &text) {
@@ -1008,37 +1026,60 @@ void DraftHandler::tryReadReadyUpWins()
         };
         QRectF winsLabel, lossesLabel;
         bool readyUp = false;
+        QStringList texts;
         for(const MacOcr::TextLine &line: MacOcr::recognizeTextLines(image, "enUS", true))
         {
+            texts << line.text;
             const QString text = key(line.text);
             if(text == key("Wins"))             winsLabel = line.rect;
             else if(text == key("Losses"))      lossesLabel = line.rect;
             else if(text == key("Ready Up"))    readyUp = true;
         }
-        if(!readyUp || winsLabel.isNull() || lossesLabel.isNull())   return int(NoAnchor);
+        read.text = texts.join(" | ");
+        read.wins = NoAnchor;
+        if(!readyUp || winsLabel.isNull() || lossesLabel.isNull())   return read;
         const qreal gap = lossesLabel.center().x() - winsLabel.center().x();
-        if(gap <= 0 || qAbs(lossesLabel.center().y() - winsLabel.center().y()) > gap*0.05)    return int(NoAnchor);
+        if(gap <= 0 || qAbs(lossesLabel.center().y() - winsLabel.center().y()) > gap*0.05)    return read;
 
         const QImage rgb = image.convertToFormat(QImage::Format_RGB32);
         const qreal r = 0.08*gap;
         const QPointF medal(winsLabel.center().x(), winsLabel.center().y() + 0.145*gap);
         const QRect crop = QRect(qRound(medal.x() - r), qRound(medal.y() - 0.8*r), qRound(2*r), qRound(1.6*r)) & rgb.rect();
         const int wins = crop.isEmpty() ? -1 : readBigNumber(rgb, crop);
-        return (wins < 0) ? int(NoNumber) : wins;
+        read.wins = (wins < 0) ? int(NoNumber) : wins;
+        return read;
     }));
 }
 
 
 void DraftHandler::finishReadReadyUpWins()
 {
-    const int wins = futureReadyUpWins.result();
+    const BigNumberRead read = futureReadyUpWins.result();
+    const int wins = read.wins;
     if(wins >= 0)
     {
         emit pDebug("Ready Up medal: " + QString::number(wins) + " wins.");
         emit readyUpWinsRead(wins);
     }
     else if(readyUpWinsTries < 30)  QTimer::singleShot(2000, this, SLOT(tryReadReadyUpWins()));
-    else                            emit pDebug("Ready Up medal not read: " + bigNumberFailText(wins) + ".");
+    else                            logUnreadBigNumber("Ready Up medal", read);
+}
+
+
+//Why a big number was never read: the text of the last try, which tells what was on screen. A dev build (qmake
+//DEFINES+=AT_DEV_BUILD) also keeps that screen in <data>/Unread; a release doesn't, it can show the player's other apps.
+void DraftHandler::logUnreadBigNumber(const QString &what, const BigNumberRead &read)
+{
+    emit pDebug(what + " not read: " + bigNumberFailText(read.wins) + ". Last read: \"" +
+                (read.text.isEmpty() ? QString("nothing") : read.text.left(400)) + "\"");
+#ifdef AT_DEV_BUILD
+    if(bigNumberImage.isNull())     return;
+    const QString dir = Utility::dataPath() + "/Unread";
+    QDir().mkpath(dir);
+    const QString path = dir + "/" + QString(what).replace(" ", "_") + "_" +
+                         QDateTime::currentDateTime().toString("MMdd-HHmmss") + ".png";
+    if(bigNumberImage.save(path))   emit pDebug("Unread screen saved: " + path);
+#endif
 }
 
 
