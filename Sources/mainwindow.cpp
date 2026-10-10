@@ -40,7 +40,7 @@ MainWindow::MainWindow(QWidget *parent) :
     readSettings();
     checkFirstRunNewVersion();
     createVersionChecker();//Despues de createDataDir (removeHSDir) y checkFirstRunNewVersion() ya que reescribe el settings "runVersion"
-    //A system dialog over Hearthstone (e.g. macOS asking to allow the capture) hides the game from the mascot
+    //A system dialog over Hearthstone (e.g. macOS asking to allow the capture): the mascot asks to answer it
     QTimer *systemDialogTimer = new QTimer(this);
     connect(systemDialogTimer, &QTimer::timeout, this, &MainWindow::checkSystemDialog);
     systemDialogTimer->start(1000);
@@ -807,8 +807,9 @@ void MainWindow::createMascotWindow()
 }
 
 
-//While a system dialog covers Hearthstone the mascot can't read the game: it asks to answer the dialog, and says
-//the current draft status again once it's gone
+//A system dialog over Hearthstone (macOS 15's screen capture reminder) covers the game for the player, not for the
+//tracker, which captures Hearthstone's window alone: the mascot asks to answer it, and says the current draft status
+//again once it's gone
 void MainWindow::checkSystemDialog()
 {
     if(!mascotLive)     return;
@@ -820,8 +821,8 @@ void MainWindow::checkSystemDialog()
     if(dialog)
     {
         pDebug("A system dialog covers Hearthstone.");
-        mascotWindow->setMood(MascotWindow::Blind);
-        mascotWindow->say("macOS put a dialog over the game, so I can't see a thing. Hit Allow and I'm back in business.");
+        mascotWindow->setMood(MascotWindow::Point);
+        mascotWindow->say("macOS wants to know if I can keep watching. Hit Allow and it'll leave us alone for a while.");
     }
     else
     {
