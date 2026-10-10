@@ -170,7 +170,7 @@ Your record per run, a verdict on the finished deck, and a reaction to every win
 3. Open **System Settings → Privacy & Security**, scroll down to *"Arena Dude" was blocked to protect your Mac* and click **Open Anyway**.
 4. Click **Open Anyway** again and confirm with Touch ID or your password. Steps 2–4 happen only once.
 5. When macOS asks, click **Open System Settings**, turn on Arena Dude in **Screen & System Audio Recording**, then quit and reopen it.
-6. Start Hearthstone, head to the Arena and click **Allow** on the privacy reminder macOS shows over the game. On the first run the Dude also downloads the card images, about a minute.
+6. Start Hearthstone and head to the Arena. On the first run the Dude downloads the card images, about a minute. If macOS shows a privacy reminder over the game, click **Allow**.
 
 <details>
 <summary><b>Show me the screenshots</b></summary>
@@ -242,7 +242,7 @@ Apple only skips that warning for apps notarized through its paid developer prog
 <details>
 <summary><b>Why does macOS ask me to Allow over the game?</b></summary>
 <br>
-It's a macOS privacy reminder ("… requesting to bypass the system private window picker"). Click <b>Allow</b>: the Dude can't read what the dialog covers, and after Allow macOS shows it less often. It may come back from time to time; the mascot will tell you.
+It's a macOS privacy reminder ("… requesting to bypass the system private window picker") about apps that read the screen. Click <b>Allow</b> and macOS shows it less often; it may come back from time to time. It doesn't get in the Dude's way: he reads only Hearthstone's window, even under the dialog.
 </details>
 
 <details>
