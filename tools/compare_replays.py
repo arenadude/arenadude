@@ -9,7 +9,7 @@ ArenaDudeDrafts.json. The mascot's lines are listed side by side: it picks them 
 outcomes (win/loss lines in the same order), not the texts. Exits with 1 if anything compared differs.
 
 Runs with recorded screens (replay_session.py --screen) also compare what the screen recognition read: the heroes
-and cards of each pick, the legendary bundles, the redraft's discards. Either side can be a tracker log instead
+and cards of each pick, the legendary bundles, the redraft's discards (the last reading of each review). Either side can be a tracker log instead
 of a run (ArenaDudeLog.txt or .gz, e.g. the fixture's log of the live session): then only the logs are compared.
 The plates' places are listed, not compared (a pixel off is no difference), and a golden card is the same card.
 """
@@ -50,6 +50,7 @@ SCREEN = [
     r"DraftHandler: Bundle of .*",
     r"DraftHandler: Redraft review picks: .*",
 ]
+REVIEW = "DraftHandler: Redraft review picks: "
 CHOOSE = re.compile(r"DraftHandler: Choose: (\w+) ")
 PLATES = re.compile(r"DraftScoreWindow: Plates by names: .*")
 MASCOT = "MainWindow: Mascot: "
@@ -86,7 +87,11 @@ def read_log(run):
         elif any(re.fullmatch(p, body) for p in GAMES):
             games.append(body)
         elif any(re.fullmatch(p, body) for p in SCREEN):
-            screen.append(body)
+            #A review's readings follow the cards as they're put in the slots, at the replay's timing: its last one counts
+            if body.startswith(REVIEW) and screen and screen[-1].startswith(REVIEW):
+                screen[-1] = body
+            else:
+                screen.append(body)
         elif PLATES.fullmatch(body):
             plates.append(body[len("DraftScoreWindow: "):])
     return events, games, mascot, screen, plates

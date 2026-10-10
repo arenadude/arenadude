@@ -22,9 +22,27 @@ python3 tools/collect_session.py -n "<short English description>"
 
 Screenshots: if the user attached one to the chat, use that and don't touch the clipboard. An attachment with a file path goes in with `-s <path>`. A pasted image without a path can't be saved, so describe what it shows in `note.md`. Only when nothing is attached and the user says they took a screenshot, add `-c` to save the clipboard image (their screenshots go to the clipboard). Then fill the `Expected` / `Actual` sections of the fixture's `note.md` from what the user said. Fixtures live in `~/Desktop/hs fixtures`, outside the repo: they contain BattleTags, never commit them.
 
+Then: reproduce it on the fixture's replay (`tools/replay_session.py`, with `--screen` if it has a recording), fix, show the fix on the same replay, and run the build check below. The fixture stays in the set, so every later check covers the bug.
+
+## Checking a build
+
+Before a build goes to the user (a dev build to play) or to a release, check it against all the fixtures:
+
+```sh
+python3 tools/check_build.py --out <scratchpad>/check-<sha> --baseline <the last good check's --out>
+```
+
+- It builds the working tree (or `--app`), replays every fixture session and compares each run with the baseline's; `report.txt` has the differences. Add `--asan` when the change touches threads, memory or containers shared with worker threads. About an hour: the screen sessions run at real time.
+- Exit 0, or every difference explained as expected from the change, before handing the build over. Say in the reply what was checked and what wasn't.
+- No baseline yet (or it's gone with the scratchpad): run the check on the last good build first (`--app`, e.g. the previous commit's build) and keep that `--out`.
+- What the replays can't see, and needs the user's play session: other screen formats (only a 16:10 fullscreen MacBook is recorded), windowed Hearthstone, macOS Game Mode, dialogs, Hearthstone screens no fixture has.
+- Dev builds for the user: `qmake ... DEFINES+=AT_DEV_BUILD` (keeps the unread screens), copied to a uniquely named, ad-hoc signed .app (macOS ties the Screen Recording grant to it).
+
+Screen recordings make the screen half replayable. When the user plays with the screen recorded (Cmd+Shift+5), cut the draft and redraft moments into `<fixture>/screen/` as clips (`ffmpeg -ss <s> -t <s> -i <mov> -vf fps=10 -c:v libx264 -crf 14 -pix_fmt yuv420p`) with a `screen.json`: the clips' start times (the recording's start is in its file name), the screen size and pixel ratio, Hearthstone's window rect in points, and `"hide": ["mascotBubble"]` when the tracker was on screen (see the promo fixture and `tools/replay_session.py`). Screen replays need the release build (ASan is too slow for real time) and `--speed 5` at most between the clips.
+
 ## Project
 
-Arena Dude (formerly the Arena Tracker fork, AT; the code still says AT in places) is a Qt 6 / C++ draft coach for Hearthstone Arena with a pixel mascot. **macOS only**: the Windows and Linux code was deleted (a port would be written again). Single qmake project, no unit tests (`tools/replay_session.py` replays recorded logs, and with `--screen` a fixture's screen recordings, see `Sources/Utils/replayscreen.h`; `tools/compare_replays.py` compares two runs or a run with the live log), no linter. Code comments are frequently in Spanish.
+Arena Dude (formerly the Arena Tracker fork, AT; the code still says AT in places) is a Qt 6 / C++ draft coach for Hearthstone Arena with a pixel mascot. **macOS only**: the Windows and Linux code was deleted (a port would be written again). Single qmake project, no unit tests (`tools/replay_session.py` replays recorded logs, and with `--screen` a fixture's screen recordings, see `Sources/Utils/replayscreen.h`; `tools/compare_replays.py` compares two runs or a run with the live log, `tools/check_build.py` runs them all, see Checking a build), no linter. Code comments are frequently in Spanish.
 
 ## Build
 
