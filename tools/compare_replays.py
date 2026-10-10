@@ -94,7 +94,32 @@ def read_log(run):
                 screen.append(body)
         elif PLATES.fullmatch(body):
             plates.append(body[len("DraftScoreWindow: "):])
-    return events, games, mascot, screen, plates
+    return unordered(events), games, mascot, screen, plates
+
+
+ADD = "DeckHandler: Add to deck: "
+SYNC = re.compile(r"(DeckHandler: Deck snapshot sync: removed )(.*)( - added )(.*)")
+
+
+def unordered(events):
+    """The deck snapshot sync walks a hash (its order changes at every start of the app): its card lists, and the
+    cards it adds in a row, sorted. The picks' cards come one by one, between the picks' lines: untouched."""
+    out = []
+    for line in events:
+        match = SYNC.fullmatch(line)
+        if match:
+            line = match[1] + ", ".join(sorted(filter(None, match[2].split(", ")))) + match[3] + \
+                   ", ".join(sorted(filter(None, match[4].split(", "))))
+        out.append(line)
+    i = 0
+    while i < len(out):
+        j = i
+        while j < len(out) and out[j].startswith(ADD):
+            j += 1
+        if j - i > 1:
+            out[i:j] = sorted(out[i:j])
+        i = max(j, i + 1)
+    return out
 
 
 def read_json(run, name, drop_dates=False):
