@@ -328,7 +328,6 @@ private:
     void beginRedraftReview();
     void emitDraftFinished();
     void updatePickRatingPool();
-    bool isPickShown();
     bool isRedraftOffered();
     void setDraftStatus(const QString &text);
     void updateRedraftRemoveList();
@@ -355,6 +354,8 @@ public:
     void setShowDraftScoresOverlay(bool value);
     void setDraftMethod(bool draftMethodHA, bool draftMethodFire);
     bool isDrafting();
+    bool isHeroDrafting();
+    bool isPickShown();
     bool isRedrafting();
     void readRewardsWins();
     void readReadyUpWins();

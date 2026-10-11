@@ -3766,6 +3766,9 @@ void DraftHandler::updateHeroScores()
 
 void DraftHandler::showNewHeroes()
 {
+    //"Scanning heroes..." is over, as the cards' status in showNewCards: a later look at the status (e.g. after a system
+    //dialog) said it again over the heroes' advice
+    setDraftStatus("");
     int classOrder[3];
     for(int i=0; i<3; i++)
     {
@@ -3880,6 +3883,12 @@ void DraftHandler::setDraftMethod(bool draftMethodHA, bool draftMethodFire)
 bool DraftHandler::isDrafting()
 {
     return this->drafting;
+}
+
+
+bool DraftHandler::isHeroDrafting()
+{
+    return this->heroDrafting;
 }
 
 

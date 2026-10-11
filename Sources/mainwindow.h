@@ -64,6 +64,7 @@ private:
     bool mascotRetired = false;
     bool mascotRewardsRetired = false;          //The run of the rewards screen being read ended by a retire
     QString mascotLastStatus;                   //The draft status behind the current status line
+    int mascotLastHeroes[3] = {-1, -1, -1};     //The class orders of the last heroes' advice
     QHash<QString, qint64> mascotStatusShownAt; //When each draft status was last shown (anti flip-flop)
     int mascotSecretsSeen = 0;                  //Enemy secrets since the app started
     bool mascotSaysStatus = false;              //The bubble shows a draft status, cleared with it

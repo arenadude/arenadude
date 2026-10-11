@@ -829,7 +829,11 @@ void MainWindow::checkSystemDialog()
         pDebug("The system dialog over Hearthstone is gone.");
         mascotLastStatus.clear();
         const QString status = draftHandler->getDraftStatus();
-        if(!status.isEmpty())   mascotDraftStatus(status);
+        //The pick read meanwhile (the capture doesn't mind the dialog): its advice again, not "Let me take a look"
+        if(draftHandler->isHeroDrafting() && draftHandler->isPickShown() && mascotLastHeroes[0] >= 0)
+            mascotHeroes(mascotLastHeroes[0], mascotLastHeroes[1], mascotLastHeroes[2]);
+        else if(draftHandler->isDrafting() && draftHandler->isPickShown())  mascotCards();
+        else if(!status.isEmpty())   mascotDraftStatus(status);
         else
         {
             mascotWindow->setMood(MascotWindow::Idle);
@@ -1216,6 +1220,10 @@ void MainWindow::mascotHeroes(int classOrder0, int classOrder1, int classOrder2)
         if(classOrder < 0 || classOrder >= classNames.count())  return QString("?");
         return MascotWindow::colored(classNames[classOrder], mascotClassColor(classOrder));
     };
+
+    mascotLastHeroes[0] = classOrder0;
+    mascotLastHeroes[1] = classOrder1;
+    mascotLastHeroes[2] = classOrder2;
 
     //Best and second best by winrate
     QList<QPair<float, int>> heroes;
