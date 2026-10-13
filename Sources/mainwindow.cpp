@@ -1438,7 +1438,10 @@ void MainWindow::mascotMulligan(QString enemyHeroCode)
     }
     QList<MascotWindow::Section> sections;
     if(!section.rows.isEmpty())     sections << section;
-    pDebug("Mulligan: enemy " + className + ", " + QString::number(section.rows.count()) + " top cards.");
+    QStringList logRows;
+    for(const TopCard &card: std::as_const(topCards))
+        logRows << card.code + " " + QString::number(card.deckShare, 'f', 1) + "% " + QString::number(card.drawnWinrate, 'f', 1) + "%";
+    pDebug("Mulligan: enemy " + className + ", " + QString::number(section.rows.count()) + " top cards: " + logRows.join(", "));
     if(sections.isEmpty())  return;
 
     mascotSaysAdvice = false;

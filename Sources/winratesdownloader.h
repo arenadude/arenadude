@@ -36,6 +36,9 @@ public:
     QMap<QString, float> fireWRMap;
     QMap<QString, int> fireSamplesMap;
     QMap<QString, FireCardStats> fireStatsMap;
+    //The class's games and wins counted from the same file (a starting deck holds 30 cards): Firestone updates the
+    //classes file and the cards files at different times, after a patch one counts the new patch, the other the old
+    double classGames = 0, classWins = 0;
 };
 
 
@@ -64,6 +67,7 @@ private:
     QMap<QString, float> *fireWRMap;
     QMap<QString, int> *fireSamplesMap;
     QMap<QString, FireCardStats> fireStatsMap[NUM_HEROS];
+    double fireClassGames[NUM_HEROS] = {0}, fireClassWins[NUM_HEROS] = {0};   //Of the cards files, see FireData
     static float heroScores[NUM_HEROS];     //Arena winrate of each class (Firestone)
     static int heroGames[NUM_HEROS];
 

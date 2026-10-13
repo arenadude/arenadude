@@ -205,6 +205,8 @@ void WinratesDownloader::initFireCards()
             this->fireWRMap[i] = fireData.fireWRMap;
             this->fireSamplesMap[i] = fireData.fireSamplesMap;
             this->fireStatsMap[i] = fireData.fireStatsMap;
+            this->fireClassGames[i] = fireData.classGames;
+            this->fireClassWins[i] = fireData.classWins;
             fireDataThreads--;
             if(fireDataThreads == 0)
             {
@@ -276,6 +278,10 @@ void WinratesDownloader::startProcessFireCards(const QJsonObject &jsonObject, co
             stats.drawn = cardStatsObject.value("drawn").toInt();
             stats.drawnWins = cardStatsObject.value("drawnThenWin").toInt();
             fireData.fireStatsMap.insert(code, stats);
+
+            //wins, like inStartingDeck, counts each copy
+            fireData.classGames += stats.copies/30.0;
+            fireData.classWins += cardStatsObject.value("wins").toInt()/30.0;
         }
         return fireData;
     });
@@ -286,7 +292,7 @@ void WinratesDownloader::startProcessFireCards(const QJsonObject &jsonObject, co
 
 
 
-//The cards of a class's decks most worth expecting from it, its own and neutrals alike: ranked by their contribution,
+//The cards of a class's decks most worth expecting from it (of the arena pool), its own and neutrals alike: ranked by their contribution,
 //copies per game x (winrate when drawn - (the class's winrate - TOP_CARDS_WINRATE_SLACK)). A strong card few decks
 //play, or a common one that wins less than its class, contributes little. Without the slack a strong class (most of
 //its cards about as good as the class) had only 2 or 3 cards left.
@@ -294,22 +300,31 @@ QList<TopCard> WinratesDownloader::getTopCards(int classOrder, int count)
 {
     QList<TopCard> topCards;
     if(classOrder < 0 || classOrder >= NUM_HEROS)   return topCards;
-    const int games = heroGames[classOrder];
+    //The class's games and winrate of the cards file itself, not of the classes file (see FireData)
+    const double games = fireClassGames[classOrder];
     if(games <= 0)  return topCards;
-    const double baseWinrate = heroScores[classOrder]/100.0 - TOP_CARDS_WINRATE_SLACK;
+    const double baseWinrate = fireClassWins[classOrder]/games - TOP_CARDS_WINRATE_SLACK;
+
+    //Only cards of the current arena pool, by name (Firestone keeps the Core reprints under their original codes):
+    //right after a season change the cards files still count the old season's cards
+    QSet<QString> poolNames;
+    const QStringList arenaCodes = Utility::getAllArenaCodes();
+    for(const QString &code: arenaCodes)    poolNames << Utility::cardEnNameFromCode(code);
 
     QList<QPair<double, TopCard>> ranked;
     for(auto it = fireStatsMap[classOrder].constBegin(); it != fireStatsMap[classOrder].constEnd(); it++)
     {
+        if(!poolNames.isEmpty() && !poolNames.contains(Utility::cardEnNameFromCode(it.key())))   continue;
+
         const FireCardStats &stats = it.value();
-        const double deckShare = stats.decks/static_cast<double>(games);
+        const double deckShare = stats.decks/games;
         if(stats.drawn < TOP_CARDS_MIN_DRAWN || deckShare < TOP_CARDS_MIN_SHARE)  continue;
 
         const QList<CardClass> cardClasses = Utility::getClassFromCode(it.key());
         if(!cardClasses.contains(static_cast<CardClass>(classOrder)) && !cardClasses.contains(NEUTRAL))   continue;
 
         const double drawnWinrate = stats.drawnWins/static_cast<double>(stats.drawn);
-        const double contribution = stats.copies/static_cast<double>(games) * (drawnWinrate - baseWinrate);
+        const double contribution = stats.copies/games * (drawnWinrate - baseWinrate);
         if(contribution <= 0)   continue;
         ranked << qMakePair(contribution, TopCard{it.key(), static_cast<float>(deckShare*100), static_cast<float>(drawnWinrate*100)});
     }
