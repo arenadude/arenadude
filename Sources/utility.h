@@ -13,8 +13,11 @@
 #include <QPropertyAnimation>
 
 
-//Repo the app downloads its data from (cards, arena sets, tier lists, images...)
+//Repo the app downloads its data from (cards, arena sets, tier lists, images...). A probe build can point it at a local
+//server of the working tree to try a data update before it goes live: qmake ... DEFINES+='AT_REPO_RAW_URL=\\\"http://localhost:8765\\\"'
+#ifndef AT_REPO_RAW_URL
 #define AT_REPO_RAW_URL "https://raw.githubusercontent.com/arenadude/arenadude/master"
+#endif
 
 #define REMOVE_CARDS_ON_VERSION_UPDATE false
 #define REMOVE_EXTRA_AND_HISTOGRAMS_ON_VERSION_UPDATE false

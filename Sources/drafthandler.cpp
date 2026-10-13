@@ -148,70 +148,44 @@ void DraftHandler::initHearthArenaTiers(const CardClass heroClass, const bool mu
     hearthArenaTiers.clear();
     QJsonObject jsonObj = Utility::loadHearthArena();
 
-    const QString &heroString = Utility::classOrder2classUL_ULName(heroClass);
-
+    //The hero's scores first, in a multiclass draft then the other classes'
+    QList<QJsonObject> classScores = {jsonObj.value(Utility::classOrder2classUL_ULName(heroClass)).toObject()};
     if(multiClassDraft)
     {
-        QJsonObject heroJsonObject = jsonObj.value(heroString).toObject();
-        QJsonObject othersJsonObject[NUM_HEROS-1];
-        for(int j=0, i=0; j<NUM_HEROS; j++)
+        for(int j=0; j<NUM_HEROS; j++)
         {
-            if(heroClass != j)
-            {
-                othersJsonObject[i++] = jsonObj.value(Utility::classOrder2classUL_ULName(j)).toObject();
-            }
-        }
-        const QStringList lfKeys = lightForgeTiers.keys();
-        for(const QString &code: lfKeys)
-        {
-            if(heroJsonObject.contains(code))
-            {
-                hearthArenaTiers.insert(code, heroJsonObject.value(code).toInt());
-            }
-            else
-            {
-                for(int i=0; i<(NUM_HEROS-1); i++)
-                {
-                    if(othersJsonObject[i].contains(code))
-                    {
-                        hearthArenaTiers.insert(code, othersJsonObject[i].value(code).toInt());
-                        break;
-                    }
-                }
-            }
+            if(heroClass != j)  classScores << jsonObj.value(Utility::classOrder2classUL_ULName(j)).toObject();
         }
     }
-    else
-    {
-        QJsonObject jsonCodesObject = jsonObj.value(heroString).toObject();
-        const QStringList lfKeys = lightForgeTiers.keys();
-        for(const QString &code: lfKeys)
-        {
-            if(jsonCodesObject.contains(code))
-            {
-                hearthArenaTiers.insert(code, jsonCodesObject.value(code).toInt());
-            }
-        }
-    }
-    emit pDebug(QStringLiteral("HearthArena Cards: %1").arg(hearthArenaTiers.count()));
 
-    //Revision
+    //A card under its own code in any class first, then under a reprint's code (searched in the tier list itself:
+    //the original of a Core card, EX1_... for CORE_EX1_..., is not an arena code)
+    QStringList unscored;
     const QStringList lfKeys = lightForgeTiers.keys();
     for(const QString &code: lfKeys)
     {
-        if(!hearthArenaTiers.contains(code))
+        auto scores = std::find_if(classScores.cbegin(), classScores.cend(),
+                                   [&code](const QJsonObject &scores){return scores.contains(code);});
+        if(scores != classScores.cend())    hearthArenaTiers.insert(code, scores->value(code).toInt());
+        else                                unscored << code;
+    }
+    emit pDebug(QStringLiteral("HearthArena Cards: %1").arg(hearthArenaTiers.count()));
+
+    for(const QString &code: std::as_const(unscored))
+    {
+        bool found = false;
+        for(const QJsonObject &scores: std::as_const(classScores))
         {
-            QString haCode = getHACode(code);
-            if(haCode == code)
-            {
-                emit pDebug(QStringLiteral("HearthArena missing: %1 - %2").arg(code, Utility::cardEnNameFromCode(code)));
-            }
-            else
+            QString haCode = findHACode(code, [&scores](const QString &c){return scores.contains(c);});
+            if(scores.contains(haCode))
             {
                 emit pDebug(QStringLiteral("HearthArena redirect: %1 -> %2 - %3").arg(code, haCode, Utility::cardEnNameFromCode(code)));
-                hearthArenaTiers.insert(code, hearthArenaTiers[haCode]);
+                hearthArenaTiers.insert(code, scores.value(haCode).toInt());
+                found = true;
+                break;
             }
         }
+        if(!found)  emit pDebug(QStringLiteral("HearthArena missing: %1 - %2").arg(code, Utility::cardEnNameFromCode(code)));
     }
     emit pDebug(QStringLiteral("HearthArena Cards with doubles: %1").arg(hearthArenaTiers.count()));
 }
@@ -2639,30 +2613,27 @@ void DraftHandler::updatePickRatingPool()
 
 int DraftHandler::getHAScore(const QString &code)
 {
-    return hearthArenaTiers[getHACode(code)];
+    return hearthArenaTiers.value(getHACode(code));
 }
 
 
 QString DraftHandler::getHACode(QString code)
 {
-    if(!hearthArenaTiers.contains(code))
+    return findHACode(code, [this](const QString &c){return hearthArenaTiers.contains(c);});
+}
+
+
+//The code a tier list scores the card under (scored): its own, the other side of a Core reprint (CORE_EX1_... and
+//EX1_...) or another card with its name; its own when none is scored
+QString DraftHandler::findHACode(const QString &code, const std::function<bool(const QString &)> &scored)
+{
+    if(scored(code))                                    return code;
+    if(code.startsWith("CORE_") && scored(code.mid(5))) return code.mid(5);
+    if(scored("CORE_" + code))                          return "CORE_" + code;
+    const QStringList altCodes = Utility::cardEnCodesFromName(Utility::cardEnNameFromCode(code));
+    for(const QString &altCode: altCodes)
     {
-        if(code.startsWith("CORE_") && hearthArenaTiers.contains(code.mid(5)))
-            code = code.mid(5);
-        else if(hearthArenaTiers.contains("CORE_" + code))
-            code = "CORE_" + code;
-        else
-        {
-            QString name = Utility::cardEnNameFromCode(code);
-            const QStringList altCodes = Utility::cardEnCodesFromName(name);
-            for(const QString &altCode: altCodes)
-            {
-                if(hearthArenaTiers.contains(altCode))
-                {
-                    code = altCode;
-                }
-            }
-        }
+        if(scored(altCode)) return altCode;
     }
     return code;
 }
@@ -3019,6 +2990,14 @@ cv::MatND DraftHandler::getHist(const QString &code)
 cv::MatND DraftHandler::getHist(const cv::Mat &srcBase)
 {
     cv::Mat hsvBase;
+
+    //No image: a card image downloaded after the draft ended (getHist(code) cuts it only while drafting),
+    //or a file OpenCV couldn't read. cvtColor would throw and quit the app.
+    if(srcBase.empty())
+    {
+        cv::MatND emptyHist;
+        return emptyHist;
+    }
 
     /// Convert to HSV
     cvtColor( srcBase, hsvBase, cv::COLOR_BGR2HSV );

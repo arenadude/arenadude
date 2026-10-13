@@ -10,6 +10,7 @@
 #include <QFutureWatcher>
 #include <QElapsedTimer>
 #include <atomic>
+#include <functional>
 
 #define DRAFT_DELAY_TIME        2000
 #define HERODRAFT_DELAY_TIME    2000
@@ -341,6 +342,7 @@ private:
     QString getFireCode(QString code);
     void addLFCode(const QString &code, const CardClass &heroClass, const bool multiClassDraft, bool buildCodesByClass);
     int getHAScore(const QString &code);
+    static QString findHACode(const QString &code, const std::function<bool(const QString &)> &scored);
 
 public:
     QString getHACode(QString code);
