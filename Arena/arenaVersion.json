@@ -1,12 +1,13 @@
 {
-  "arenaVersion": 83,
+  "arenaVersion": 84,
   "arenaSets": [
-    "EMERALD_DREAM",
-    "THE_LOST_CITY",
     "TIME_TRAVEL",
-    "CATACLYSM",
-    "ESCAPEFROM_VIOLET_HOLD",
-    "EVENT"
+    "EVENT",
+    "BE",
+    "CORE",
+    "ISLAND_VACATION",
+    "TITANS",
+    "WILD_WEST"
   ],
   "multiclassArena": false,
   "trustHA": false,
